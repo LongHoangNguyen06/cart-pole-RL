@@ -5,10 +5,15 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Python Debugger: Module",
+            "name": "Train",
             "type": "debugpy",
             "request": "launch",
-            "module": "manual_control"
+            "module": "main",
+            "args": [
+                "--architecture", "config/architecture1.yaml",
+                "--hyperparameter", "config/hyperparameters1.yaml",
+                "--train"
+            ]
         }
     ]
 }
