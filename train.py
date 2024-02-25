@@ -9,8 +9,11 @@ import matplotlib
 from pathlib import Path
 import wandb
 
-matplotlib.use('TKAgg')
-
+try:
+    matplotlib.use('TKAgg')
+except Exception as e:
+    print(e)
+    
 Path("train").mkdir(parents=True, exist_ok=True)
 
 def apply_random_seed(random_seed: int) -> None:
