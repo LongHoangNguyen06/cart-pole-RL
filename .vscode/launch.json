@@ -12,6 +12,7 @@
             "args": [
                 "--architecture", "config/architecture1.yaml",
                 "--hyperparameter", "config/hyperparameters1.yaml",
+                "--device", "cpu",
                 "--train"
             ]
         }

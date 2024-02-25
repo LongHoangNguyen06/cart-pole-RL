@@ -2,7 +2,8 @@ import torch
 
 import torch.nn
 import collections
- 
+import numpy as np
+
 class Builder(object):
     def __init__(self, *namespaces):
         self._namespace = collections.ChainMap(*namespaces)
@@ -66,32 +67,42 @@ def build_network(architecture, builder=Builder(torch.nn.__dict__)):
         layers.append(builder(name, *args, **kwargs))
     return torch.nn.Sequential(*layers)
 
-# TODO:
-# implement epsilon-greedy strategy
-
 class Network(torch.nn.Module):
-    def __init__(self, params, architecture, device):        
+    def __init__(self, params):        
         super().__init__()
-        #self.net = build_network(architecture=architecture)
+        # self.net = build_network(architecture=params["ARCHITECTURE"])
         self.net = torch.nn.Sequential(
-            torch.nn.Linear(in_features=4, out_features=2, bias=True, device = device)
+            torch.nn.Linear(in_features=4, out_features=2, bias=True, device=params["DEVICE"])
         )
         self.params = params
-        self.architecture = architecture
-        self.device = device
     
     def forward(self, x):
         return self.net(x)
 
-    def get_action(self, x: torch.Tensor, train: bool):
-        if train:
-            pass
-        return self.params["ACTIONS"][self(x).argmax()]
-
 
 def duplicate(net: Network) -> Network:
-    copied_net = Network(params=net.params,
-                         architecture=net.architecture,
-                         device=net.device)
+    copied_net = Network(params=net.params)
     copied_net.load_state_dict(net.state_dict())
     return copied_net
+
+class ActionInferrer:
+    def __init__(self, net: Network, params: dict) -> None:
+        self.net = net
+        self.params = params
+        self.epoch = 0
+
+    def get_epsilon(self):
+        return np.clip((1 - self.epoch / self.params["FINAL_GREEDY_EPSILON_EPOCH"]), self.params["FINAL_GREEDY_EPSILON"], 1.0)
+
+    def get_train_action(self, x: torch.Tensor):
+        if np.random.rand() < self.get_epsilon():
+            print("Random action")
+            action = np.random.choice(self.params["ACTIONS"])
+        else:
+            print("Best action")
+            action = self.get_best_action(x)
+        self.epoch += 1
+        return action
+    
+    def get_best_action(self, x: torch.Tensor):
+        return self.params["ACTIONS"][self.net(x).argmax()]

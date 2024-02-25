@@ -13,6 +13,11 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     architecture = yaml.safe_load(Path(args.architecture).read_text())
-    parameters = yaml.safe_load(Path(args.hyperparameter).read_text())
+    params = yaml.safe_load(Path(args.hyperparameter).read_text())
+    params["DEVICE"] = args.device
+    params["MODE"] = args.mode
+    params["TRAIN"] = args.train
+    params["ARCHITECTURE"] = architecture
+    
     if args.train:
-        train.train(params=parameters, architecture=architecture, args=args)
+        train.train(params=params)
