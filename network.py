@@ -66,15 +66,19 @@ def build_network(architecture, builder=Builder(torch.nn.__dict__)):
         layers.append(builder(name, *args, **kwargs))
     return torch.nn.Sequential(*layers)
 
+# TODO:
+# implement epsilon-greedy strategy
+
 class Network(torch.nn.Module):
     def __init__(self, params, architecture, device):        
         super().__init__()
         #self.net = build_network(architecture=architecture)
-        self.device = device
         self.net = torch.nn.Sequential(
-            torch.nn.Linear(in_features=4, out_features=2, bias=True, device = self.device)
+            torch.nn.Linear(in_features=4, out_features=2, bias=True, device = device)
         )
         self.params = params
+        self.architecture = architecture
+        self.device = device
     
     def forward(self, x):
         return self.net(x)
@@ -85,5 +89,9 @@ class Network(torch.nn.Module):
         return self.params["ACTIONS"][self(x).argmax()]
 
 
-        
-        
+def duplicate(net: Network) -> Network:
+    copied_net = Network(params=net.params,
+                         architecture=net.architecture,
+                         device=net.device)
+    copied_net.load_state_dict(net.state_dict())
+    return copied_net
