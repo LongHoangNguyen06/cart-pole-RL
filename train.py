@@ -7,6 +7,7 @@ from buffer import Buffer
 import matplotlib.pyplot as plt
 import matplotlib
 from pathlib import Path
+import wandb
 
 matplotlib.use('TKAgg')
 
@@ -80,6 +81,8 @@ def train_iteration(net: network.Network,
     return loss
 
 def train(params: dict):
+    wandb.init(project="Cart Pole RL")
+
     # Initialize network and RL loop
     net = network.Network(params=params)
     action_inferrer = network.ActionInferrer(net=net, params=params)
@@ -102,7 +105,6 @@ def train(params: dict):
     debug_pole_angle = []
     debug_pole_angular_velocity = []
     debug_single_awards = []
-    debug_reward = 0
 
     # Training loop
     for epoch in range(params["TRAINING_EPOCHS"]):
@@ -119,7 +121,7 @@ def train(params: dict):
         # Simulate environment once and insert next state to buffer
         for _ in range(params["FRAME_SKIP"]):
             next_obs, re, done, _, _ = env.step(action)
-            
+
         if done:
             if episode_reward + re < params["MAX_REWARD"]:
                 re = params["REWARD_PENALTY_FAIL"]
@@ -129,50 +131,58 @@ def train(params: dict):
         # Duplicate the network once for a while and fix it
         if epoch % params["DUP_FREQ"] == 0:
             dup_net = network.duplicate(net=net)
-
-        # Reset to new map if done
-        if done:
-            seed += 1
-            next_obs, _ = env.reset(seed=seed)  # Reset the environment if the episode is over
-
-        # Set next observation as current one
-        obs = next_obs
         
         # Debugging part
-        debug_reward += re
         debug_single_awards.append(re)
         debug_cart_position.append(obs[0])
         debug_cart_velocity.append(obs[1])
         debug_pole_angle.append(obs[2])
         debug_pole_angular_velocity.append(obs[3])
         if done:
-            debug_rewards.append(debug_reward)
-            debug_reward = 0
+            debug_rewards.append(episode_reward)
+            wandb.log({"episode_reward": episode_reward})
 
-            plt.figure()
+            fig = plt.figure()
             plt.plot(debug_losses)
+            wandb.log({"losses": wandb.Image(fig)})
             plt.savefig("train/losses.png")
 
-            plt.figure()
+            fig = plt.figure()
             plt.plot(debug_rewards)
+            wandb.log({"rewards": wandb.Image(fig)})
             plt.savefig("train/rewards.png")
 
-            plt.figure()
+            fig = plt.figure()
             plt.plot(debug_single_awards)
+            wandb.log({"single_rewards": wandb.Image(fig)})
             plt.savefig("train/single_rewards.png")
 
-            plt.figure()
+            fig = plt.figure()
             plt.plot(debug_cart_position)
+            wandb.log({"positions": wandb.Image(fig)})
             plt.savefig("train/positions.png")
 
-            plt.figure()
+            fig = plt.figure()
             plt.plot(debug_cart_velocity)
+            wandb.log({"velocity": wandb.Image(fig)})
             plt.savefig("train/velocity.png")
 
-            plt.figure()
+            fig = plt.figure()
             plt.plot(debug_pole_angle)
+            wandb.log({"angle": wandb.Image(fig)})
             plt.savefig("train/angle.png")
 
-            plt.figure()
+            fig = plt.figure()
             plt.plot(debug_pole_angular_velocity)
+            wandb.log({"angular_velocity": wandb.Image(fig)})
             plt.savefig("train/angular_velocity.png")
+
+        # Reset to new map if done
+        if done:
+            seed += 1
+            next_obs, _ = env.reset(seed=seed)  # Reset the environment if the episode is over
+            episode_reward = 0
+
+        # Set next observation as current one
+        obs = next_obs
+    wandb.finish()
