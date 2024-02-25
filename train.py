@@ -89,12 +89,20 @@ def train(params: dict):
     env = gym.make('CartPole-v1', render_mode=params["MODE"])
     apply_random_seed(params["RANDOM_SEED"])
     
-    # Initialize variables for debugging
+    # Initialize variables
     seed = 0
     obs, _ = env.reset(seed=seed)
-    losses = []
-    rewards = []
-    reward = 0
+    episode_reward = 0
+
+    # Initialize variables for debugging
+    debug_losses = []
+    debug_rewards = []
+    debug_cart_position = []
+    debug_cart_velocity = []
+    debug_pole_angle = []
+    debug_pole_angular_velocity = []
+    debug_single_awards = []
+    debug_reward = 0
 
     # Training loop
     for epoch in range(params["TRAINING_EPOCHS"]):
@@ -103,14 +111,19 @@ def train(params: dict):
         # Training part
         if epoch >= params["BATCH_SIZE"]:
             loss = train_iteration(net=net, dup_net=dup_net, opt=opt, buff=buff, params=params)
-            losses.append(loss.item())
+            debug_losses.append(loss.item())
         
         # Get action to fill buffer
         action = action_inferrer.get_train_action(x=torch.Tensor(obs).to(params["DEVICE"]))
 
         # Simulate environment once and insert next state to buffer
-        next_obs, re, done, _, _ = env.step(action)
-        reward += re
+        for _ in range(params["FRAME_SKIP"]):
+            next_obs, re, done, _, _ = env.step(action)
+            
+        if done:
+            if episode_reward + re < params["MAX_REWARD"]:
+                re = params["REWARD_PENALTY_FAIL"]
+        episode_reward += re
         buff.append(current_state=obs, action=action, next_state=next_obs, current_reward=re)
 
         # Duplicate the network once for a while and fix it
@@ -119,20 +132,47 @@ def train(params: dict):
 
         # Reset to new map if done
         if done:
-            rewards.append(reward)
-            reward = 0
             seed += 1
             next_obs, _ = env.reset(seed=seed)  # Reset the environment if the episode is over
-        
-        # Debugging part
-        if done:
-            plt.figure()
-            plt.plot(losses)
-            plt.savefig("train/losses.png")
-
-            plt.figure()
-            plt.plot(rewards)
-            plt.savefig("train/rewards.png")
 
         # Set next observation as current one
         obs = next_obs
+        
+        # Debugging part
+        debug_reward += re
+        debug_single_awards.append(re)
+        debug_cart_position.append(obs[0])
+        debug_cart_velocity.append(obs[1])
+        debug_pole_angle.append(obs[2])
+        debug_pole_angular_velocity.append(obs[3])
+        if done:
+            debug_rewards.append(debug_reward)
+            debug_reward = 0
+
+            plt.figure()
+            plt.plot(debug_losses)
+            plt.savefig("train/losses.png")
+
+            plt.figure()
+            plt.plot(debug_rewards)
+            plt.savefig("train/rewards.png")
+
+            plt.figure()
+            plt.plot(debug_single_awards)
+            plt.savefig("train/single_rewards.png")
+
+            plt.figure()
+            plt.plot(debug_cart_position)
+            plt.savefig("train/positions.png")
+
+            plt.figure()
+            plt.plot(debug_cart_velocity)
+            plt.savefig("train/velocity.png")
+
+            plt.figure()
+            plt.plot(debug_pole_angle)
+            plt.savefig("train/angle.png")
+
+            plt.figure()
+            plt.plot(debug_pole_angular_velocity)
+            plt.savefig("train/angular_velocity.png")

@@ -72,7 +72,11 @@ class Network(torch.nn.Module):
         super().__init__()
         # self.net = build_network(architecture=params["ARCHITECTURE"])
         self.net = torch.nn.Sequential(
-            torch.nn.Linear(in_features=4, out_features=2, bias=True, device=params["DEVICE"])
+            torch.nn.Linear(in_features=4, out_features=16, bias=True, device=params["DEVICE"]),
+            torch.nn.ReLU(),
+            torch.nn.Linear(in_features=16, out_features=8, bias=True, device=params["DEVICE"]),
+            torch.nn.ReLU(),
+            torch.nn.Linear(in_features=8, out_features=2, bias=True, device=params["DEVICE"])
         )
         self.params = params
     
