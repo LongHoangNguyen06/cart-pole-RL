@@ -10,7 +10,6 @@
             "request": "launch",
             "module": "main",
             "args": [
-                "--architecture", "config/architecture2.yaml",
                 "--hyperparameter", "config/hyperparameters2.yaml",
                 "--device", "cpu",
                 "--train"

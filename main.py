@@ -2,14 +2,26 @@ import argparse
 import yaml
 from pathlib import Path
 import train
+import numpy as np
+import torch
+import random
+
+def apply_random_seed(random_seed: int) -> None:
+    """Sets seed to ``random_seed`` in random, numpy and torch."""
+    random.seed(random_seed)
+    np.random.seed(random_seed)
+    torch.manual_seed(random_seed)
+    torch.cuda.manual_seed(random_seed)
+    torch.cuda.manual_seed_all(random_seed)
+    torch.backends.cudnn.benchmark = False
+    torch.backends.cudnn.deterministic = True
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(prog='Cart-Pole trainer', description='Train RL model for cart pole')
-    parser.add_argument('--architecture')
     parser.add_argument('--hyperparameter')
     parser.add_argument('--device', default="cuda")
     parser.add_argument('--mode', default="human")
-    parser.add_argument('--train', action='store_true')  # on/off flag
+    parser.add_argument('--train', action='store_true')
     args = parser.parse_args()
 
     architecture = yaml.safe_load(Path(args.architecture).read_text())
@@ -18,6 +30,8 @@ if __name__ == '__main__':
     params["MODE"] = args.mode
     params["TRAIN"] = args.train
     params["ARCHITECTURE"] = architecture
-    
+    print(params)
+
     if args.train:
+        apply_random_seed(params["RANDOM_SEED"])
         train.train(params=params)
