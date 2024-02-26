@@ -57,7 +57,7 @@ def train(params: dict):
     action_inferrer = network.ActionInferrer(net=net, params=params)
     dup_net = network.duplicate(net=net)
     buff = Buffer(params=params)
-    opt = torch.optim.RMSprop(params=net.parameters(), lr=params["LR"], weight_decay=params["WEIGHT_DECAY"])
+    opt = torch.optim.RMSprop(params=net.parameters(), lr=params["LR"])
     env = EnvWrapper(env=gym.make('CartPole-v1', render_mode=params["MODE"]), params=params)
     
     # Initialize variables

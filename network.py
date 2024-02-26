@@ -9,12 +9,12 @@ class Network(torch.nn.Module):
         self.layers = [
             torch.nn.Sequential(
                 torch.nn.Linear(in_features=4, out_features=32, bias=True, device=params["DEVICE"]),
-                torch.nn.ReLU(),
+                torch.nn.LeakyReLU(),
                 torch.nn.BatchNorm1d(num_features=32)
             ),
             torch.nn.Sequential(
                 torch.nn.Linear(in_features=32, out_features=16, bias=True, device=params["DEVICE"]),
-                torch.nn.ReLU(),
+                torch.nn.LeakyReLU(),
                 torch.nn.BatchNorm1d(num_features=16)
             ),
             torch.nn.Sequential(
@@ -28,6 +28,7 @@ class Network(torch.nn.Module):
             torch.zeros(1, 2)
         ]
         self.params = params
+        self.net = torch.nn.Sequential(*self.layers)
     
     def forward(self, x):
         self.activations[0] = x
