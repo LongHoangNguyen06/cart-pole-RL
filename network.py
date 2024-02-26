@@ -17,6 +17,42 @@ class Network(torch.nn.Module):
     
     def forward(self, x):
         return self.net(x)
+    
+    def mean_weight(self):
+        weights = []
+        for param in self.parameters():
+            weights.append(param.data.view(-1))
+        all_weights = torch.cat(weights)
+        return torch.mean(all_weights)
+    
+    def std_weight(self):
+        weights = []
+        for param in self.parameters():
+            weights.append(param.data.view(-1))
+        all_weights = torch.cat(weights)
+        return torch.std(all_weights)
+    
+    def mean_grad(self):
+        grads = []
+        for param in self.parameters():
+            if param.grad is not None:
+                grads.append(param.grad.data.view(-1))
+        if len(grads) > 0:
+            all_grads = torch.cat(grads)
+            return torch.mean(all_grads)
+        else:
+            return 0
+    
+    def std_grad(self):
+        grads = []
+        for param in self.parameters():
+            if param.grad is not None:
+                grads.append(param.grad.data.view(-1))
+        if len(grads) > 0:
+            all_grads = torch.cat(grads)
+            return torch.std(all_grads)
+        else:
+            return 0
 
 
 def duplicate(net: Network) -> Network:

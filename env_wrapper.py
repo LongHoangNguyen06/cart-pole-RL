@@ -2,10 +2,10 @@ import gymnasium as gym
 import numpy as np
 from gymnasium.core import ActType
 
-def min_max_scaling(observation: np.ndarray, min: float, max: float):
-    assert min < max
-    observation = np.clip(observation, min=min, max=max)
-    return (observation - min) / (max - min)
+def min_max_scaling(observation: np.ndarray, a_min: float, a_max: float):
+    assert a_min < a_max
+    observation = np.clip(observation, a_min=a_min, a_max=a_max)
+    return (observation - a_min) / (a_max - a_min)
 
 def preprocess_data(observation: np.ndarray, params: dict):
     """Preprocess observation. 
@@ -20,24 +20,24 @@ def preprocess_data(observation: np.ndarray, params: dict):
         np.ndarray: Preprocessed data
     """
     # Position
-    observation[:, 0] = min_max_scaling(observation[:, 0], 
-                                min=params["MIN_CART_POSITION"],
-                                max=params["MAX_CART_POSITION"])
+    observation[0] = min_max_scaling(observation[0], 
+                                a_min=params["MIN_CART_POSITION"],
+                                a_max=params["MAX_CART_POSITION"])
     
     # Velocity
-    observation[:, 1] = min_max_scaling(observation[:, 1], 
-                                min=params["MIN_CART_VELOCITY"],
-                                max=params["MAX_CART_VELOCITY"])
+    observation[1] = min_max_scaling(observation[1], 
+                                a_min=params["MIN_CART_VELOCITY"],
+                                a_max=params["MAX_CART_VELOCITY"])
 
     # Angle
-    observation[:, 2] = min_max_scaling(observation[:, 2], 
-                                min=params["MIN_CART_POLE_ANGLE"],
-                                max=params["MAX_CART_POLE_ANGLE"])
+    observation[2] = min_max_scaling(observation[2], 
+                                a_min=params["MIN_CART_POLE_ANGLE"],
+                                a_max=params["MAX_CART_POLE_ANGLE"])
 
     # Angular velocity
-    observation[:, 3] = min_max_scaling(observation[:, 3], 
-                                min=params["MIN_CART_POLE_VELOCITY"],
-                                max=params["MAX_CART_POLE_VELOCITY"])
+    observation[3] = min_max_scaling(observation[3], 
+                                a_min=params["MIN_CART_POLE_VELOCITY"],
+                                a_max=params["MAX_CART_POLE_VELOCITY"])
     return observation
 
 def preprocess_reward(observation: np.ndarray, reward: float, terminated: bool, 

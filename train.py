@@ -48,7 +48,7 @@ def train(params: dict):
     Args:
         params (dict): parameters to train model
     """
-    wandb.init(project="Cart Pole RL")
+    wandb.init(project="Cart Pole RL", name=params["EXPERIMENT_NAME"])
 
     # Initialize network and RL loop
     net = network.Network(params=params)
@@ -82,7 +82,7 @@ def train(params: dict):
         
         # Episode reward
         episode_reward += reward
-        buff.append(current_state=observation, 
+        buff.append(observation=observation, 
                     action=action, 
                     next_observation=next_observation, 
                     reward=reward)
@@ -92,19 +92,26 @@ def train(params: dict):
             dup_net = network.duplicate(net=net)
         
         # Debugging part
-        wandb.log({"greedy_epsilon": action_inferrer.get_epsilon()})
-        wandb.log({"episode_reward": episode_reward})
-        wandb.log({"positions": next_observation[0]})
-        wandb.log({"reward": reward})
-        wandb.log({"velocity": next_observation[1]})
-        wandb.log({"angle": next_observation[2]})
-        wandb.log({"angular_velocity": next_observation[3]})
-        if loss: wandb.log({"loss": loss})
+        wandb.log({"training/greedy_epsilon": action_inferrer.get_epsilon()})
+        wandb.log({"training/reward": reward})
+        wandb.log({"training/action": int(action)})
+        if loss: wandb.log({"training/loss": float(loss)})
+
+        wandb.log({"state/positions": float(next_observation[0])})
+        wandb.log({"state/velocity": float(next_observation[1])})
+        wandb.log({"state/angle": float(next_observation[2])})
+        wandb.log({"state/angular_velocity": float(next_observation[3])})
+        
+        wandb.log({"network/mean_weight": net.mean_weight()})
+        wandb.log({"network/std_weight": net.std_weight()})
+        wandb.log({"network/mean_grad": net.mean_grad()})
+        wandb.log({"network/std_grad": net.std_grad()})
 
         # Reset to new map if terminated
         if terminated:
             seed += 1
             next_observation, _ = env.reset(seed=seed)  # Reset the environment if the episode is over
+            wandb.log({"training/episode_reward": episode_reward})
             episode_reward = 0
 
         # Set next observation as current one

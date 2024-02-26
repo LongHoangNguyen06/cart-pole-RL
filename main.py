@@ -24,13 +24,16 @@ if __name__ == '__main__':
     parser.add_argument('--train', action='store_true')
     args = parser.parse_args()
 
-    architecture = yaml.safe_load(Path(args.architecture).read_text())
     params = yaml.safe_load(Path(args.hyperparameter).read_text())
     params["DEVICE"] = args.device
     params["MODE"] = args.mode
     params["TRAIN"] = args.train
-    params["ARCHITECTURE"] = architecture
-    print(params)
+
+    print("#"*100)
+    for key, value in params.items():
+        key = key.ljust(max(len(k) for k in params)) 
+        print(key, value)
+    print("#"*100)
 
     if args.train:
         apply_random_seed(params["RANDOM_SEED"])
