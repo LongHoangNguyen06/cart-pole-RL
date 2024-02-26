@@ -25,11 +25,17 @@ def train_iteration(net: network.Network,
     Returns:
         float: _description_
     """
-    observation, action, next_observation, rewards = buff.get_random_batch()
-    next_state_best_rewards = dup_net(next_observation).max(dim=-1, keepdims=True)[0]
-    current_state_actual_rewards = rewards.view(-1, 1) + params["GAMMA"] * next_state_best_rewards # Bellman-Equation
+    # Sampling random states
+    observation, action, next_observation, reward = buff.get_random_batch()
+    
+    # Compute expected
+    next_state_best_rewards = dup_net(next_observation).max(dim=-1)[0]
+    current_state_actual_rewards = reward + params["GAMMA"] * next_state_best_rewards # Bellman-Equation
+    
+    # Compute actual
     current_state_pred = net(observation)[:, action]
     
+    # Loss and backprop
     loss = ((current_state_actual_rewards - current_state_pred)**2).mean()
     opt.zero_grad()
     loss.backward()
@@ -86,6 +92,7 @@ def train(params: dict):
             dup_net = network.duplicate(net=net)
         
         # Debugging part
+        wandb.log({"greedy_epsilon": action_inferrer.get_epsilon()})
         wandb.log({"episode_reward": episode_reward})
         wandb.log({"positions": next_observation[0]})
         wandb.log({"reward": reward})

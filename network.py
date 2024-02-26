@@ -35,10 +35,8 @@ class ActionInferrer:
 
     def get_train_action(self, x: np.ndarray):
         if np.random.rand() < self.get_epsilon():
-            print("Random action")
             action = np.random.choice(self.params["ACTIONS"])
         else:
-            print("Best action")
             action = self.get_best_action(x)
         self.epoch += 1
         return action
