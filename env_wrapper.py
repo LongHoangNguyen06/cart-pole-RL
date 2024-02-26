@@ -36,8 +36,8 @@ def preprocess_data(observation: np.ndarray, params: dict):
 
     # Angular velocity
     observation[3] = min_max_scaling(observation[3], 
-                                a_min=params["MIN_CART_POLE_VELOCITY"],
-                                a_max=params["MAX_CART_POLE_VELOCITY"])
+                                a_min=params["MIN_CART_POLE_ANGULAR_VELOCITY"],
+                                a_max=params["MAX_CART_POLE_ANGULAR_VELOCITY"])
     return observation
 
 def preprocess_reward(observation: np.ndarray, reward: float, terminated: bool, 

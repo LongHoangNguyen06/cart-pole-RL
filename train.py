@@ -5,7 +5,8 @@ import network
 from buffer import Buffer
 from pathlib import Path
 import wandb
-    
+from tqdm import tqdm
+
 Path("train").mkdir(parents=True, exist_ok=True)
 
 def train_iteration(net: network.Network, 
@@ -25,6 +26,7 @@ def train_iteration(net: network.Network,
     Returns:
         float: _description_
     """
+    net.train()
     # Sampling random states
     observation, action, next_observation, reward = buff.get_random_batch()
     
@@ -64,7 +66,7 @@ def train(params: dict):
     episode_reward = 0
 
     # Training loop
-    for epoch in range(params["TRAINING_EPOCHS"]):
+    for epoch in tqdm(range(params["TRAINING_EPOCHS"])):
         env.render()
         
         # Training part
@@ -73,7 +75,8 @@ def train(params: dict):
             loss = train_iteration(net=net, dup_net=dup_net, opt=opt, buff=buff, params=params)
         
         # Get action to fill buffer
-        action = action_inferrer.get_train_action(observation)
+        net.eval()
+        action = action_inferrer.get_train_action(observation.reshape(1, -1))
 
         # Simulate environment once and insert next observation to buffer
         for _ in range(params["FRAME_SKIP"]):
@@ -92,20 +95,30 @@ def train(params: dict):
             dup_net = network.duplicate(net=net)
         
         # Debugging part
-        wandb.log({"training/greedy_epsilon": action_inferrer.get_epsilon()})
-        wandb.log({"training/reward": reward})
-        wandb.log({"training/action": int(action)})
-        if loss: wandb.log({"training/loss": float(loss)})
+        wandb.log({"metric/greedy_epsilon": action_inferrer.get_epsilon()})
+        wandb.log({"metric/reward": reward})
+        if loss: wandb.log({"metric/loss": float(loss)})
 
-        wandb.log({"state/positions": float(next_observation[0])})
-        wandb.log({"state/velocity": float(next_observation[1])})
-        wandb.log({"state/angle": float(next_observation[2])})
-        wandb.log({"state/angular_velocity": float(next_observation[3])})
+        wandb.log({"input/positions": float(next_observation[0])})
+        wandb.log({"input/velocity": float(next_observation[1])})
+        wandb.log({"input/angle": float(next_observation[2])})
+        wandb.log({"input/angular_velocity": float(next_observation[3])})
         
-        wandb.log({"network/mean_weight": net.mean_weight()})
-        wandb.log({"network/std_weight": net.std_weight()})
-        wandb.log({"network/mean_grad": net.mean_grad()})
-        wandb.log({"network/std_grad": net.std_grad()})
+        wandb.log({"weight/mean_weight": net.mean_weight()})
+        wandb.log({"weight/std_weight": net.std_weight()})
+        wandb.log({"weight/mean_grad": net.mean_grad()})
+        wandb.log({"weight/std_grad": net.std_grad()})
+        
+        wandb.log({"activation/mean_layer1": torch.mean(net.x1)})
+        wandb.log({"activation/std_layer1": torch.std(net.x1)})
+        wandb.log({"activation/mean_layer2": torch.mean(net.x2)})
+        wandb.log({"activation/std_layer2": torch.std(net.x2)})
+        wandb.log({"activation/mean_layer3": torch.mean(net.x3)})
+        wandb.log({"activation/std_layer3": torch.std(net.x3)})
+        wandb.log({"activation/action": int(action)})
+        net.x1 = torch.zeros_like(net.x1)
+        net.x2 = torch.zeros_like(net.x2)
+        net.x3 = torch.zeros_like(net.x3)
 
         # Reset to new map if terminated
         if terminated:
