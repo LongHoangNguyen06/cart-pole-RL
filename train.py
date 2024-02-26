@@ -32,13 +32,14 @@ def train_iteration(net: network.Network,
     
     # Compute expected
     next_state_best_rewards = dup_net(next_observation).max(dim=-1)[0] * (1 - terminated)
-    current_state_actual_rewards = reward + params["GAMMA"] * next_state_best_rewards # Bellman-Equation
+    state_action_expected_reward = reward + params["GAMMA"] * next_state_best_rewards # Bellman-Equation
     
     # Compute actual
-    current_state_pred = net(observation)[:, action]
+    all_state_pred = net(observation)
+    state_action_reward_pred = all_state_pred[torch.arange(len(all_state_pred)), action]
     
     # Loss and backprop
-    loss = ((current_state_actual_rewards - current_state_pred)**2).mean()
+    loss = ((state_action_expected_reward - state_action_reward_pred)**2).mean()
     opt.zero_grad()
     loss.backward()
     opt.step()
@@ -81,7 +82,7 @@ def train(params: dict):
         # Simulate environment once and insert next observation to buffer
         for _ in range(params["FRAME_SKIP"]):
             next_observation, reward, terminated, truncated, _ = env.step(action)
-            if terminated: break
+            if terminated or truncated: break
         
         # Episode reward
         episode_reward += reward
@@ -92,31 +93,30 @@ def train(params: dict):
                     terminated=terminated)
 
         # Duplicate the network once for a while and fix it
-        if epoch % params["DUP_FREQ"] == 0:
-            dup_net = network.duplicate(net=net)
+        if epoch % params["DUP_FREQ"] == 0: dup_net = network.duplicate(net=net)
         
         # Debugging part
-        wandb.log({"metric/greedy_epsilon": action_inferrer.get_epsilon()},step=epoch)
-        wandb.log({"metric/reward": reward},step=epoch)
-        if loss: wandb.log({"metric/loss": float(loss)},step=epoch)
+        if True:
+            wandb.log({"metric/greedy_epsilon": action_inferrer.get_epsilon()},step=epoch)
+            wandb.log({"metric/reward": reward},step=epoch)
+            if loss: wandb.log({"metric/loss": float(loss)},step=epoch)
 
-        wandb.log({"input/positions": float(next_observation[0])},step=epoch)
-        wandb.log({"input/velocity": float(next_observation[1])},step=epoch)
-        wandb.log({"input/angle": float(next_observation[2])},step=epoch)
-        wandb.log({"input/angular_velocity": float(next_observation[3])},step=epoch)
-        
-        for i, layer in enumerate(net.layers):
-            wandb.log({f"layer{i+1}/mean_activation": torch.mean(net.activations[i+1])},step=epoch)
-            wandb.log({f"layer{i+1}/std_activation": torch.std(net.activations[i+1])},step=epoch)
-            wandb.log({f"layer{i+1}/mean_weight": net.mean_weight(layer)},step=epoch)
-            wandb.log({f"layer{i+1}/std_weight": net.std_weight(layer)},step=epoch)
-            wandb.log({f"layer{i+1}/mean_grad": net.mean_grad(layer)},step=epoch)
-            wandb.log({f"layer{i+1}/std_grad": net.std_grad(layer)},step=epoch)
+            wandb.log({"input/positions": float(next_observation[0])},step=epoch)
+            wandb.log({"input/velocity": float(next_observation[1])},step=epoch)
+            wandb.log({"input/angle": float(next_observation[2])},step=epoch)
+            wandb.log({"input/angular_velocity": float(next_observation[3])},step=epoch)
+            
+            for i, layer in enumerate(net.layers):
+                wandb.log({f"layer{i+1}/mean_activation": torch.mean(net.activations[i+1])},step=epoch)
+                wandb.log({f"layer{i+1}/std_activation": torch.std(net.activations[i+1])},step=epoch)
+                wandb.log({f"layer{i+1}/mean_weight": net.mean_weight(layer)},step=epoch)
+                wandb.log({f"layer{i+1}/std_weight": net.std_weight(layer)},step=epoch)
+                wandb.log({f"layer{i+1}/mean_grad": net.mean_grad(layer)},step=epoch)
+                wandb.log({f"layer{i+1}/std_grad": net.std_grad(layer)},step=epoch)
 
         # Reset to new map if terminated
-        if terminated:
-            seed += 1
-            next_observation, _ = env.reset(seed=seed)  # Reset the environment if the episode is over
+        if terminated or truncated:
+            next_observation, _ = env.reset()  # Reset the environment if the episode is over
             wandb.log({"metric/episode_reward": episode_reward})
             episode_reward = 0
 
