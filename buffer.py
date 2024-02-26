@@ -1,13 +1,12 @@
+from typing import Tuple
 import numpy as np
-from collections import deque
 import torch
+from torchrl.data import ReplayBuffer, ListStorage
 
 class Buffer:
     def __init__(self, params: dict) -> None:
-        self.buffer = deque()
-        self.size = params["BUFFER_SIZE"]
-        self.batch_size = params["BATCH_SIZE"]
-        self.params = params
+        self.buffer = ReplayBuffer(storage=ListStorage(max_size=params["BUFFER_SIZE"]),
+                                   batch_size=params["BATCH_SIZE"])
 
     def append(self, current_state: np.ndarray, 
                     action: int, 
@@ -19,27 +18,30 @@ class Buffer:
             next_state (np.ndarray): State obtained after submitting action.
             current_reward (float): Reward obtained after submitting action.
         """
-        self.buffer.append((current_state, action, next_state, current_reward))
-        if len(self.buffer) >= self.size:
-            self.buffer.popleft()
+        self.buffer.append({
+            "current_state": current_state, 
+            "action": action, 
+            "next_state": next_state, 
+            "current_reward": current_reward
+        })
     
-    def get_random_batch(self) -> None:
+    def get_random_batch(self) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
         """Generate random data batch
 
         Returns:
-            torch.tensor: 4 tensors correspond to: current observations, action used, next observation and yielded reward.
+            torch.tensor: 4 tensors correspond to: 
+                current state
+                action used
+                next state
+                current reward
         """
         obs, action, next_obs, reward = [], [], [], []
-        # Collect random samples
-        for i in  np.random.randint(0, len(self.buffer), size=self.batch_size):
-            obs.append(self.buffer[i][0])
-            action.append(self.buffer[i][1])
-            next_obs.append(self.buffer[i][2])
-            reward.append(self.buffer[i][3])
-        
-        # Convert to tensor and return
-        obs, next_obs, reward = np.array(obs), np.array(next_obs), np.array(reward)
-        return torch.Tensor(obs).to(self.params["DEVICE"]), \
-            torch.Tensor(action).to(self.params["DEVICE"]).long(), \
-            torch.Tensor(next_obs).to(self.params["DEVICE"]), \
-            torch.Tensor(reward).to(self.params["DEVICE"])
+        for i in  self.buffer.sample():
+            obs.append(i["current_state"])
+            action.append(i["action"])
+            next_obs.append(i["next_state"])
+            reward.append(i["current_reward"])
+        return torch.cat(obs, 0).to(self.params["DEVICE"]), \
+            torch.cat(action, 0).to(self.params["DEVICE"]).long(), \
+            torch.cat(next_obs, 0).to(self.params["DEVICE"]), \
+            torch.cat(reward, 0).to(self.params["DEVICE"])
