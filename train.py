@@ -57,7 +57,7 @@ def train(params: dict):
     action_inferrer = network.ActionInferrer(net=net, params=params)
     dup_net = network.duplicate(net=net)
     buff = Buffer(params=params)
-    opt = torch.optim.Adam(params=net.parameters(), lr=params["LR"])
+    opt = torch.optim.RMSprop(params=net.parameters(), lr=params["LR"], weight_decay=params["WEIGHT_DECAY"])
     env = EnvWrapper(env=gym.make('CartPole-v1', render_mode=params["MODE"]), params=params)
     
     # Initialize variables
@@ -105,27 +105,19 @@ def train(params: dict):
         wandb.log({"input/angle": float(next_observation[2])},step=epoch)
         wandb.log({"input/angular_velocity": float(next_observation[3])},step=epoch)
         
-        wandb.log({"weight/mean_weight": net.mean_weight()},step=epoch)
-        wandb.log({"weight/std_weight": net.std_weight()},step=epoch)
-        wandb.log({"weight/mean_grad": net.mean_grad()},step=epoch)
-        wandb.log({"weight/std_grad": net.std_grad()},step=epoch)
-        
-        wandb.log({"activation/mean_layer1": torch.mean(net.x1)},step=epoch)
-        wandb.log({"activation/std_layer1": torch.std(net.x1)},step=epoch)
-        wandb.log({"activation/mean_layer2": torch.mean(net.x2)},step=epoch)
-        wandb.log({"activation/std_layer2": torch.std(net.x2)},step=epoch)
-        wandb.log({"activation/mean_layer3": torch.mean(net.x3)},step=epoch)
-        wandb.log({"activation/std_layer3": torch.std(net.x3)},step=epoch)
-        wandb.log({"activation/action": int(action)},step=epoch)
-        net.x1 = torch.zeros_like(net.x1)
-        net.x2 = torch.zeros_like(net.x2)
-        net.x3 = torch.zeros_like(net.x3)
+        for i, layer in enumerate(net.layers):
+            wandb.log({f"layer{i+1}/mean_activation": torch.mean(net.activations[i+1])},step=epoch)
+            wandb.log({f"layer{i+1}/std_activation": torch.std(net.activations[i+1])},step=epoch)
+            wandb.log({f"layer{i+1}/mean_weight": net.mean_weight(layer)},step=epoch)
+            wandb.log({f"layer{i+1}/std_weight": net.std_weight(layer)},step=epoch)
+            wandb.log({f"layer{i+1}/mean_grad": net.mean_grad(layer)},step=epoch)
+            wandb.log({f"layer{i+1}/std_grad": net.std_grad(layer)},step=epoch)
 
         # Reset to new map if terminated
         if terminated:
             seed += 1
             next_observation, _ = env.reset(seed=seed)  # Reset the environment if the episode is over
-            wandb.log({"training/episode_reward": episode_reward})
+            wandb.log({"metric/episode_reward": episode_reward})
             episode_reward = 0
 
         # Set next observation as current one

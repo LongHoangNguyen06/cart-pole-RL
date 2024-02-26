@@ -6,47 +6,52 @@ import numpy as np
 class Network(torch.nn.Module):
     def __init__(self, params):        
         super().__init__()
-        self.layer1 = torch.nn.Sequential(
-            torch.nn.Linear(in_features=4, out_features=64, bias=True, device=params["DEVICE"]),
-            torch.nn.ReLU(),
-            torch.nn.BatchNorm1d(num_features=64)
-        )
-        self.x1 = torch.zeros(1, 64)
-        self.layer2 = torch.nn.Sequential(
-            torch.nn.Linear(in_features=64, out_features=32, bias=True, device=params["DEVICE"]),
-            torch.nn.ReLU(),
-            torch.nn.BatchNorm1d(num_features=32)
-        )
-        self.x2 = torch.zeros(1, 32)
-        self.layer3 = torch.nn.Sequential(
-            torch.nn.Linear(in_features=32, out_features=2, bias=True, device=params["DEVICE"])
-        )
-        self.x3 = torch.zeros(1, 2)
+        self.layers = [
+            torch.nn.Sequential(
+                torch.nn.Linear(in_features=4, out_features=32, bias=True, device=params["DEVICE"]),
+                torch.nn.ReLU(),
+                torch.nn.BatchNorm1d(num_features=32)
+            ),
+            torch.nn.Sequential(
+                torch.nn.Linear(in_features=32, out_features=16, bias=True, device=params["DEVICE"]),
+                torch.nn.ReLU(),
+                torch.nn.BatchNorm1d(num_features=16)
+            ),
+            torch.nn.Sequential(
+                torch.nn.Linear(in_features=16, out_features=2, bias=True, device=params["DEVICE"])
+            )
+        ]
+        self.activations = [
+            torch.zeros(1, 4),
+            torch.zeros(1, 32),
+            torch.zeros(1, 16),
+            torch.zeros(1, 2)
+        ]
         self.params = params
     
     def forward(self, x):
-        self.x1 = self.layer1(x)
-        self.x2 = self.layer2(self.x1)
-        self.x3 = self.layer3(self.x2)
-        return self.x3
+        self.activations[0] = x
+        for i, layer in enumerate(self.layers):
+            self.activations[i + 1] = layer(self.activations[i])
+        return self.activations[-1]
     
-    def mean_weight(self):
+    def mean_weight(self, layer):
         weights = []
-        for param in self.parameters():
+        for param in layer.parameters():
             weights.append(param.data.view(-1))
         all_weights = torch.cat(weights)
         return torch.mean(all_weights)
     
-    def std_weight(self):
+    def std_weight(self, layer):
         weights = []
-        for param in self.parameters():
+        for param in layer.parameters():
             weights.append(param.data.view(-1))
         all_weights = torch.cat(weights)
         return torch.std(all_weights)
     
-    def mean_grad(self):
+    def mean_grad(self, layer):
         grads = []
-        for param in self.parameters():
+        for param in layer.parameters():
             if param.grad is not None:
                 grads.append(param.grad.data.view(-1))
         if len(grads) > 0:
@@ -55,9 +60,9 @@ class Network(torch.nn.Module):
         else:
             return 0
     
-    def std_grad(self):
+    def std_grad(self, layer):
         grads = []
-        for param in self.parameters():
+        for param in layer.parameters():
             if param.grad is not None:
                 grads.append(param.grad.data.view(-1))
         if len(grads) > 0:
