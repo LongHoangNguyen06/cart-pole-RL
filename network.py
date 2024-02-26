@@ -10,12 +10,12 @@ class Network(torch.nn.Module):
             torch.nn.Sequential(
                 torch.nn.Linear(in_features=4, out_features=32, bias=True, device=params["DEVICE"]),
                 torch.nn.LeakyReLU(),
-                torch.nn.BatchNorm1d(num_features=32)
+                torch.nn.BatchNorm1d(num_features=32, device=params["DEVICE"])
             ),
             torch.nn.Sequential(
                 torch.nn.Linear(in_features=32, out_features=16, bias=True, device=params["DEVICE"]),
                 torch.nn.LeakyReLU(),
-                torch.nn.BatchNorm1d(num_features=16)
+                torch.nn.BatchNorm1d(num_features=16, device=params["DEVICE"])
             ),
             torch.nn.Sequential(
                 torch.nn.Linear(in_features=16, out_features=2, bias=True, device=params["DEVICE"])

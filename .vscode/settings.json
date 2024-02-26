@@ -2,5 +2,21 @@
     "files.exclude": {
         "**/__pycache__": true,
         "**/wandb": true
-    }
+    },
+    "saveAndRun": {
+        "commands": [
+          {
+            "match": ".*",
+            "cmd": "rsync -a --no-owner ${file} gpu-server:/home/long/Documents/GitHub/cart-pole-RL/${relativeFile}",
+            "useShortcut": false,
+            "silent": true
+          },
+          {
+            "match": ".*",
+            "cmd": "rsync -a --no-owner gpu-server:/home/long/Documents/GitHub/cart-pole-RL/logs .",
+            "useShortcut": false,
+            "silent": true
+          },
+        ]
+      }
 }
