@@ -5,7 +5,7 @@ from gymnasium.core import ActType
 def min_max_scaling(observation: np.ndarray, a_min: float, a_max: float):
     assert a_min < a_max
     observation = np.clip(observation, a_min=a_min, a_max=a_max)
-    return (observation - a_min) / (a_max - a_min)
+    return (observation - a_min) / (a_max - a_min) - 0.5
 
 def preprocess_data(observation: np.ndarray, params: dict):
     """Preprocess observation. 
