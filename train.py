@@ -17,21 +17,21 @@ def train_iteration(net: network.Network,
     """One training loop of Deep-Q-Learning
 
     Args:
-        net (network.Network): _description_
-        dup_net (network.Network): _description_
-        opt (torch.optim.Optimizer): _description_
-        buff (Buffer): _description_
-        params (dict): _description_
+        net (network.Network): Network.
+        dup_net (network.Network): Target network.
+        opt (torch.optim.Optimizer): Optimizer.
+        buff (Buffer): Replay buffer.
+        params (dict): Training parameters
 
     Returns:
-        float: _description_
+        float: loss of the batch
     """
     net.train()
     # Sampling random states
-    observation, action, next_observation, reward = buff.get_random_batch()
+    observation, action, next_observation, reward, terminated = buff.get_random_batch()
     
     # Compute expected
-    next_state_best_rewards = dup_net(next_observation).max(dim=-1)[0]
+    next_state_best_rewards = dup_net(next_observation).max(dim=-1)[0] * (1 - terminated)
     current_state_actual_rewards = reward + params["GAMMA"] * next_state_best_rewards # Bellman-Equation
     
     # Compute actual
@@ -80,7 +80,7 @@ def train(params: dict):
 
         # Simulate environment once and insert next observation to buffer
         for _ in range(params["FRAME_SKIP"]):
-            next_observation, reward, terminated, _, _ = env.step(action)
+            next_observation, reward, terminated, truncated, _ = env.step(action)
             if terminated: break
         
         # Episode reward
@@ -88,7 +88,8 @@ def train(params: dict):
         buff.append(observation=observation, 
                     action=action, 
                     next_observation=next_observation, 
-                    reward=reward)
+                    reward=reward,
+                    terminated=terminated)
 
         # Duplicate the network once for a while and fix it
         if epoch % params["DUP_FREQ"] == 0:
