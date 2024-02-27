@@ -71,17 +71,12 @@ class EnvWrapper(gym.Wrapper):
 
     def reset(self, **kwargs):
         observation, info = super().reset(**kwargs)
-        observation = preprocess_data(observation=observation, params=self.params)
+        #observation = preprocess_data(observation=observation, params=self.params)
         return observation, info
 
     def step(self, action: ActType):
         observation, reward, terminated, truncated, info = super().step(action)
-        observation = preprocess_data(observation=observation, params=self.params)
-        reward = preprocess_reward(observation=observation, 
-                                   reward=reward, 
-                                   terminated=terminated, 
-                                   truncated=truncated, 
-                                   info=info, 
-                                   params=self.params)
+        #observation = preprocess_data(observation=observation, params=self.params)
+        #reward = preprocess_reward(observation=observation, reward=reward, terminated=terminated, truncated=truncated, info=info, params=self.params)
 
         return observation, reward, terminated, truncated, info

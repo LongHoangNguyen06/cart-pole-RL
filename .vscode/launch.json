@@ -5,6 +5,17 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Experiment 8",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "main",
+            "args": [
+                "--hyperparameter", "config/hyperparameters8.yaml",
+                "--device", "cpu",
+                "--train"
+            ]
+        },
+        {
             "name": "Experiment 7",
             "type": "debugpy",
             "request": "launch",
