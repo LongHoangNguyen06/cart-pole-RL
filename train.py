@@ -61,7 +61,6 @@ def train(params: dict):
     # Initialize variables
     observation, _ = env.reset(seed=params["RANDOM_SEED"])
     episode_reward = 0
-    actions = []
 
     # Training loop
     for epoch in tqdm(range(params["TRAINING_EPOCHS"])):
@@ -111,11 +110,7 @@ def train(params: dict):
                 wandb.log({f"layer{i+1}/mean_grad": net.mean_grad(layer)},step=epoch)
                 wandb.log({f"layer{i+1}/std_grad": net.std_grad(layer)},step=epoch)
 
-            actions.append(float(action))
-            table = wandb.Table(data=[actions], columns=["actions"])
-            wandb.log({'output/action_histogram': wandb.plot.histogram(table, "actions",
-                    title="Actions distribution")})
-            wandb.log({'output/action': float(action)})
+            wandb.log({'output/action': float(action)},step=epoch)
 
 
         # Reset to new map if terminated
