@@ -140,10 +140,9 @@ def train(params: dict):
     for i in range(len(episode_rewards) - window_size + 1):
         windows.append(np.mean(episode_rewards[i:i + window_size]))
     performance = np.max(windows)
-
     wandb.log({"metric/performance": performance})
-
     wandb.finish()
+    env.close()
     return performance
 
 def normal_train(params):
@@ -151,12 +150,18 @@ def normal_train(params):
     train(params=params)
 
 def hyperopt(device: str, mode: str):
-    def hyperopt_training_loop(wandb_config):
-        try:
-            params = wandb_config
-            print(wandb_config)
-            exit()
-            train(params)
+    session_counter = 0
+    def hyperopt_training_loop(config=None):
+        nonlocal session_counter
+        session_counter += 1
+        try:    
+            with wandb.init(config = config, name=f"session_{session_counter}"):
+                params = wandb.config
+                params["DEVICE"] = device
+                params["MODE"] = mode
+                params["ARCHITECTURE"] = [4, params["HIDDEN_LAYER_1"], params["HIDDEN_LAYER_2"], 2]
+                params = dict(params)
+                train(params)
         except Exception as e:
             print(traceback.format_exc())
             raise e
@@ -168,48 +173,59 @@ def hyperopt(device: str, mode: str):
             "goal": "maximize"
         },
         "parameters": {
+            "ACTION_SPACE_SEED": {
+                "value": 42
+            },
+            "RANDOM_SEED": {
+                "value": 42
+            },
+            "ACTIONS": {
+                "value": [0, 1]
+            },
+            "SCORING_WINDOW_SIZE": {
+                "value": 100
+            },
             "LR": {
                 "min": 1e-6,
                 "max": 1e-1
             },
             "TRAINING_EPOCHS": {
-                "min": 1e-6,
-                "max": 1e-2
+                "values": [10000, 25000, 50000, 100000, 250000, 500000, 1000000]
             },
             "FINAL_GREEDY_EPSILON_EPOCH": {
-                "values": [32, 64, 128, 256]
+                "values": [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7]
             },
             "FINAL_GREEDY_EPSILON": {
-                "value": "nll"
+                "values": [0.01, 0.025, 0.05, 0.075, 0.1]
             },
             "BUFFER_SIZE": {
-                "value": 42
+                "values": [0.1, 0.2, 0.5, 1.0]
             },
             "BATCH_SIZE": {
-                "value": "cuda"
+                "values": [32, 64, 128, 256, 512]
             },
             "DUP_FREQ": {
-                "value": 80
+                "values": [50, 100, 250, 500, 750, 1000, 2000, 5000, 10000]
             },
             "GAMMA": {
-                "value": 500
+                "values": [0.9, 0.95, 0.99]
             },
             "LR": {
-                "value": 5
+                "values": [0.01, 0.001, 0.0001, 0.00001]
             },
             "DROPOUT_P": {
-                "value": 5e-4
+                "values": [0.05, 0.1, 0.2, 0.3, 0.4, 0.5]
             },
             "HIDDEN_LAYER_1": {
-                "value": 5e-4
+                "values": [8, 16, 32, 64, 128]
             },
             "HIDDEN_LAYER_2": {
-                "value": 5e-4
+                "values": [8, 16, 32, 64, 128]
             },
             "FRAME_SKIP": {
-                "value": 5e-4
+                "values": [1, 2, 3, 4]
             }
         }
     }
     sweep_id = wandb.sweep(config, project='Cart Pole RL')
-    wandb.agent(sweep_id, hyperopt_training_loop, count=config["parameters"]["count"]["value"])
+    wandb.agent(sweep_id, hyperopt_training_loop, count=10000)

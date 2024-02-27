@@ -5,7 +5,8 @@ from torchrl.data import ReplayBuffer, ListStorage
 
 class Buffer:
     def __init__(self, params: dict) -> None:
-        self.buffer = ReplayBuffer(storage=ListStorage(max_size=params["BUFFER_SIZE"]),
+        max_size = int(params["BUFFER_SIZE"] * params["TRAINING_EPOCHS"])
+        self.buffer = ReplayBuffer(storage=ListStorage(max_size=max_size),
                                    batch_size=params["BATCH_SIZE"])
         self.params = params
 
