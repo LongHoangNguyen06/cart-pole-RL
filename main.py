@@ -24,7 +24,7 @@ if __name__ == '__main__':
     parser.add_argument('--train', action='store_true')
     parser.add_argument('--hyper_opt', action='store_true')
     args = parser.parse_args()
-
+    
     if args.train:
         params = yaml.safe_load(Path(f"config/hyperparameters{Repository('.').head.shorthand}.yaml").read_text())
         params["DEVICE"] = args.device
