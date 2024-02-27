@@ -1,4 +1,4 @@
-ex=
+ex=8
 python3 -m main \
 --hyperparameter config/hyperparameters${ex}.yaml \
 --device cuda \
