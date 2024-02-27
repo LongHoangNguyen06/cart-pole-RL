@@ -63,12 +63,12 @@ Formally we want to formulate the expected rewards we can get at state $s_t$ if 
 
 $$Q^\pi(s_t, a_t) = \mathbb{E}[\sum_k \gamma^k r_{t + k} \mid s_t, a_t, \pi]$$
 
-While the discount factor $\gamma$ can be tuned, if $\gamma < 1$ then its exponential nature make future rewards vanishing quickly. The optimal $\hat{Q}(s_t, a_t)$ given fixed $s_t, a_t$ can be achieved by learning the best policy. Suppose we know $\hat{Q}(s_t, a_t)$ for any $a_t$, then the best action can be determined with this $Q^*$; and knowing the best possible action for the current state gives us the optimal policy. While this seems like a chicken egg problem, the next theoretical part will help us to resolve the circular dependency.
+While the discount factor $\gamma$ can be tuned, if $\gamma < 1$ then its exponential nature make future rewards vanishing quickly. The optimal $\hat{Q}(s_t, a_t)$ given fixed $s_t, a_t$ can be achieved by learning the best policy. Suppose we know $\hat{Q}(s_t, a_t)$ for any $a_t$, then the best action can be determined with this $\hat{Q}$; and knowing the best possible action for the current state gives us the optimal policy. While this seems like a chicken egg problem, the next theoretical part will help us to resolve the circular dependency.
 
 
 It's not hard to show that 
 
-$$\hat{Q}(s_t, a_t) = \mathbb{E}[\sum_k \gamma^k r_{t + k} \mid s_t, a_t, \pi] = \mathbb{E}[r_t + \gamma \max_{a'} Q^*(s_{t+1}, a')]$$
+$$\hat{Q}(s_t, a_t) = \mathbb{E}[\sum_k \gamma^k r_{t + k} \mid s_t, a_t, \pi] = \mathbb{E}[r_t + \gamma \max_{a'} \hat{Q}(s_{t+1}, a')]$$
 
 While the third expression, also known as the Bellman Optimality Equation, simplifies the the initial definition, we can still not learn a policy that maximizes the $Q$-value at state $s_t$, because we still need the $Q$-value at state $t+1$. Turn out, we can still learn $\hat{Q}$ iteratively by replace the optimal $\hat{Q}$ in the definition simply with the current learned $Q$ and the iterative scheme, also called $Q$-learning, will converge to $\hat{Q}$ when some very weak assumptions are met.
 
