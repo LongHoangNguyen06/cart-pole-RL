@@ -1,4 +1,5 @@
 import gymnasium as gym
+import numpy as np
 import torch
 import network
 from buffer import Buffer
@@ -69,7 +70,7 @@ def train(params: dict):
     # Initialize variables
     observation, _ = env.reset(seed=params["RANDOM_SEED"])
     episode_reward = 0
-
+    episode_rewards = []
     # Training loop
     for epoch in tqdm(range(params["TRAINING_EPOCHS"])):
         env.render()
@@ -128,8 +129,18 @@ def train(params: dict):
                 wandb.log({'episode_start/velocity': float(next_observation[1])},step=epoch)
                 wandb.log({'episode_start/angle': float(next_observation[2])},step=epoch)
                 wandb.log({'episode_start/angular_velocity': float(next_observation[3])},step=epoch)
+                episode_rewards.append(episode_reward)
                 episode_reward = 0
 
         # Set next observation as current one
         observation = next_observation
+
     wandb.finish()
+
+    # Evaluating how well the model work
+    windows, window_size = [], params["SCORING_WINDOW_SIZE"]
+
+    for i in range(len(episode_rewards) - window_size + 1):
+        windows.append(np.mean(episode_rewards[i:i + window_size]))
+
+    return np.max(windows)
