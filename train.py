@@ -150,7 +150,7 @@ def normal_train(params):
     wandb.init(project="Cart Pole RL", name=params["EXPERIMENT_NAME"])
     train(params=params)
 
-def hyperopt(device: str, mode: str):
+def hyperopt(device: str, mode: str, agent_id = None):
     session_counter = 0
     def hyperopt_training_loop(config=None):
         nonlocal session_counter
@@ -168,5 +168,7 @@ def hyperopt(device: str, mode: str):
             raise e
     with open("config/hyperopt_search_space.json", "r") as f:
         config = json.load(f)
-    sweep_id = wandb.sweep(config, project='Cart Pole RL')
-    wandb.agent(sweep_id, hyperopt_training_loop, count=10000)
+    if agent_id is None:
+        agent_id = wandb.sweep(config, project='Cart Pole RL')
+    print(f"Using agent_id = {agent_id}")
+    wandb.agent(agent_id, hyperopt_training_loop, count=10000)
