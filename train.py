@@ -190,7 +190,7 @@ def hyperopt(device: str, mode: str):
                 "max": 1e-1
             },
             "TRAINING_EPOCHS": {
-                "values": [10000, 25000, 50000, 100000, 250000, 500000, 1000000]
+                "values": [1000] #[10000, 25000, 50000, 100000, 250000, 500000, 1000000]
             },
             "FINAL_GREEDY_EPSILON_EPOCH": {
                 "values": [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7]
