@@ -1,7 +1,7 @@
 import argparse
 import yaml
 from pathlib import Path
-import train
+import DQL
 import numpy as np
 import torch
 import random
@@ -33,6 +33,6 @@ if __name__ == '__main__':
         params["TRAIN"] = args.train
         params["EXPERIMENT_NAME"] = f"experiment_{Repository('.').head.shorthand.zfill(3)}"
         apply_random_seed(params["RANDOM_SEED"])
-        train.normal_train(params=params)
+        DQL.normal_train(params=params)
     elif args.hyper_opt:
-        train.hyperopt(device=args.device, mode=args.mode, sweep_id=args.sweep_id)
+        DQL.hyperopt(device=args.device, mode=args.mode, sweep_id=args.sweep_id)
