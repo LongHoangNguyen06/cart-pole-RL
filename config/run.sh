@@ -1,3 +1,3 @@
-branch_name="$(git symbolic-ref HEAD 2>/dev/null)" ||
-
-screen -S ${branch_name} "/home/long/anaconda3/envs/DL/bin/python3 -m main --device cuda --mode rgb_array --train &> logs/${branch_name}.log"
+export branch_name=$(git rev-parse --symbolic-full-name --abbrev-ref HEAD)
+echo "Running on branch ${branch_name}"
+screen -S ${branch_name} bash -c "bash config/run_screen.sh"

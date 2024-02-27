@@ -24,7 +24,7 @@ if __name__ == '__main__':
     parser.add_argument('--train', action='store_true')
     args = parser.parse_args()
 
-    params = yaml.safe_load(Path(f"config/hyperparameters{Repository('.').head.shorthand}.yaml"))
+    params = yaml.safe_load(Path(f"config/hyperparameters{Repository('.').head.shorthand}.yaml").read_text())
     params["DEVICE"] = args.device
     params["MODE"] = args.mode
     params["TRAIN"] = args.train
