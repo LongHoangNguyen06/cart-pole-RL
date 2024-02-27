@@ -79,7 +79,8 @@ class ActionInferrer:
         self.epoch = 0
 
     def get_epsilon(self):
-        return np.clip((1 - self.epoch / self.params["FINAL_GREEDY_EPSILON_EPOCH"]), self.params["FINAL_GREEDY_EPSILON"], 1.0)
+        last_greedy_epoch = self.params["FINAL_GREEDY_EPSILON_EPOCH"] * self.params["TRAINING_EPOCHS"]
+        return np.clip((1 - self.epoch / last_greedy_epoch), self.params["FINAL_GREEDY_EPSILON"], 1.0)
 
     def get_train_action(self, x: np.ndarray):
         if np.random.rand() < self.get_epsilon():
