@@ -1,6 +1,5 @@
 import gymnasium as gym
 import torch
-from env_wrapper import EnvWrapper
 import network
 from buffer import Buffer
 import wandb
@@ -58,7 +57,7 @@ def train(params: dict):
     dup_net = network.duplicate(net=net)
     buff = Buffer(params=params)
     opt = torch.optim.RMSprop(params=net.parameters(), lr=params["LR"])
-    env = EnvWrapper(env=gym.make('CartPole-v1', render_mode=params["MODE"]), params=params)
+    env = gym.make('CartPole-v1', render_mode=params["MODE"])
     params["MODEL_PARAMETERS"] = str(sum(p.numel() for p in net.parameters() if p.requires_grad))
     
     # Debug

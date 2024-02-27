@@ -8,12 +8,12 @@ class Network(torch.nn.Module):
         super().__init__()
         self.layers = [
             torch.nn.Sequential(
-                torch.nn.Linear(in_features=4, out_features=32, bias=True, device=params["DEVICE"]),
+                torch.nn.Linear(in_features=4, out_features=16, bias=True, device=params["DEVICE"]),
                 torch.nn.LeakyReLU(),
-                torch.nn.BatchNorm1d(num_features=32, device=params["DEVICE"])
+                torch.nn.BatchNorm1d(num_features=16, device=params["DEVICE"])
             ),
             torch.nn.Sequential(
-                torch.nn.Linear(in_features=32, out_features=16, bias=True, device=params["DEVICE"]),
+                torch.nn.Linear(in_features=16, out_features=16, bias=True, device=params["DEVICE"]),
                 torch.nn.LeakyReLU(),
                 torch.nn.BatchNorm1d(num_features=16, device=params["DEVICE"])
             ),
@@ -23,7 +23,7 @@ class Network(torch.nn.Module):
         ]
         self.activations = [
             torch.zeros(1, 4),
-            torch.zeros(1, 32),
+            torch.zeros(1, 16),
             torch.zeros(1, 16),
             torch.zeros(1, 2)
         ]
