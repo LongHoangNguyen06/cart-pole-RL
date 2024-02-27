@@ -39,6 +39,8 @@ def train_iteration(net: network.Network,
     loss = ((state_action_expected_reward - state_action_reward_pred)**2).mean()
     opt.zero_grad()
     loss.backward()
+    for param in net.parameters():
+        param.grad.data.clamp_(-1, 1)
     opt.step()
     return loss
 
