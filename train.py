@@ -156,7 +156,8 @@ def hyperopt(device: str, mode: str, agent_id = None):
         nonlocal session_counter
         session_counter += 1
         try:    
-            with wandb.init(config = config, name=f"session_{session_counter}"):
+            import time
+            with wandb.init(config = config, name=f"session_{session_counter}_{round(time.time())}"):
                 params = wandb.config
                 params["DEVICE"] = device
                 params["MODE"] = mode
