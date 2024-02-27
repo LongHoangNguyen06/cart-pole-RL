@@ -9,10 +9,7 @@
             "type": "debugpy",
             "request": "launch",
             "module": "main",
-            "args": ["--device", "cpu", "--train", "--mode", "human"],
-            "env": {
-              "EXPERIMENT": "10"
-            }
+            "args": ["--device", "cpu", "--train", "--mode", "human"]
         }
     ]
 }
