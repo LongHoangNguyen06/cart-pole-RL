@@ -3,11 +3,8 @@ import torch
 from env_wrapper import EnvWrapper
 import network
 from buffer import Buffer
-from pathlib import Path
 import wandb
 from tqdm import tqdm
-
-Path("train").mkdir(parents=True, exist_ok=True)
 
 def train_iteration(net: network.Network, 
                     dup_net: network.Network, 
@@ -58,12 +55,11 @@ def train(params: dict):
     action_inferrer = network.ActionInferrer(net=net, params=params)
     dup_net = network.duplicate(net=net)
     buff = Buffer(params=params)
-    opt = torch.optim.RMSprop(params=net.parameters(), lr=params["LR"])
+    opt = torch.optim.Adam(params=net.parameters(), lr=params["LR"])
     env = EnvWrapper(env=gym.make('CartPole-v1', render_mode=params["MODE"]), params=params)
     
     # Initialize variables
-    seed = 0
-    observation, _ = env.reset(seed=seed)
+    observation, _ = env.reset(seed=params["RANDOM_SEED"])
     episode_reward = 0
 
     # Training loop
