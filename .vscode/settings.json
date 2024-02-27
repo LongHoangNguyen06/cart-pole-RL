@@ -17,6 +17,12 @@
             "useShortcut": false,
             "silent": true
           },
+          {
+            "match": ".*",
+            "cmd": "rsync -a --no-owner .git gpu-server:/home/long/Documents/GitHub/cart-pole-RL",
+            "useShortcut": false,
+            "silent": true
+          },
         ]
       }
 }
