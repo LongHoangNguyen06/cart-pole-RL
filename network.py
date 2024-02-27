@@ -7,7 +7,7 @@ class Network(torch.nn.Module):
     def __init__(self, params):        
         super().__init__()
         self.layers = []
-        for i in range(len(params["ARCHITECTURE"]) - 1):
+        for i in range(len(params["ARCHITECTURE"]) - 2):
             self.layers.append(torch.nn.Sequential(
                     torch.nn.Linear(in_features=params["ARCHITECTURE"][i], out_features=params["ARCHITECTURE"][i+1], bias=True, device=params["DEVICE"]),
                     torch.nn.LeakyReLU(),
