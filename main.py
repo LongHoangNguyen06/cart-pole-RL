@@ -35,4 +35,4 @@ if __name__ == '__main__':
         apply_random_seed(params["RANDOM_SEED"])
         train.normal_train(params=params)
     elif args.hyper_opt:
-        train.hyperopt(device=args.device, mode=args.mode, )
+        train.hyperopt(device=args.device, mode=args.mode, agent_id=args.agent_id)
