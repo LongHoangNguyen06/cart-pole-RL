@@ -5,15 +5,14 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Experiment 10",
+            "name": "Experiment",
             "type": "debugpy",
             "request": "launch",
             "module": "main",
-            "args": [
-                "--hyperparameter", "config/hyperparameters10.yaml",
-                "--device", "cpu",
-                "--train"
-            ]
+            "args": ["--device", "cpu", "--train", "--mode", "human"],
+            "env": {
+              "EXPERIMENT": "10"
+            }
         }
     ]
 }

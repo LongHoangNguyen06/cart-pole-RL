@@ -5,6 +5,8 @@ import train
 import numpy as np
 import torch
 import random
+import os
+
 
 def apply_random_seed(random_seed: int) -> None:
     """Sets seed to ``random_seed`` in random, numpy and torch."""
@@ -18,16 +20,16 @@ def apply_random_seed(random_seed: int) -> None:
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(prog='Cart-Pole trainer', description='Train RL model for cart pole')
-    parser.add_argument('--hyperparameter')
     parser.add_argument('--device', default="cuda")
     parser.add_argument('--mode', default="human")
     parser.add_argument('--train', action='store_true')
     args = parser.parse_args()
 
-    params = yaml.safe_load(Path(args.hyperparameter).read_text())
+    params = yaml.safe_load(Path(f"config/hyperparameters{os.environ['EXPERIMENT']}.yaml"))
     params["DEVICE"] = args.device
     params["MODE"] = args.mode
     params["TRAIN"] = args.train
+    params["EXPERIMENT_NAME"] = f"experiment_{os.environ['EXPERIMENT'].zfill(3)}"
 
     print("#"*100)
     for key, value in params.items():

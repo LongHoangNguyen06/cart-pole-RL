@@ -1,6 +1,6 @@
-ex=10
+EXPERIMENT=10
 python3 -m main \
---hyperparameter config/hyperparameters${ex}.yaml \
+--hyperparameter config/hyperparameters${EXPERIMENT}.yaml \
 --device cuda \
 --mode rgb_array \
---train &> logs/${ex}.log
+--train &> logs/${EXPERIMENT}.log
