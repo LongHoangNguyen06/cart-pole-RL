@@ -111,13 +111,16 @@ def train(params: dict):
                 wandb.log({f"layer{i+1}/std_grad": net.std_grad(layer)},step=epoch)
 
             wandb.log({'output/action': float(action)},step=epoch)
-
-
-        # Reset to new map if terminated
-        if terminated or truncated:
-            next_observation, _ = env.reset()  # Reset the environment if the episode is over
-            wandb.log({"metric/episode_reward": episode_reward})
-            episode_reward = 0
+            
+            # Reset to new map if terminated
+            if terminated or truncated:
+                next_observation, _ = env.reset()  # Reset the environment if the episode is over
+                wandb.log({"metric/episode_reward": episode_reward},step=epoch)
+                wandb.log({'episode_start/positions': float(next_observation[0])},step=epoch)
+                wandb.log({'episode_start/velocity': float(next_observation[1])},step=epoch)
+                wandb.log({'episode_start/angle': float(next_observation[2])},step=epoch)
+                wandb.log({'episode_start/angular_velocity': float(next_observation[3])},step=epoch)
+                episode_reward = 0
 
         # Set next observation as current one
         observation = next_observation
