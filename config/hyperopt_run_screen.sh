@@ -1,1 +1,1 @@
-/home/long/anaconda3/envs/DL/bin/python3 -m main --device cuda --mode rgb_array --hyper_opt --agent_id l40pvsdn &> logs/${branch_name}_$(date +%s%3N).log
+/home/long/anaconda3/envs/DL/bin/python3 -m main --device cuda --mode rgb_array --hyper_opt --sweep_id ytlit82d &> logs/${branch_name}_$(date +%s%3N).log
