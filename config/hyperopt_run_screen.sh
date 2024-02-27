@@ -1,1 +1,1 @@
-/home/long/anaconda3/envs/DL/bin/python3 -m main --device cuda --mode rgb_array --hyper_opt &> logs/${branch_name}.log
+/home/long/anaconda3/envs/DL/bin/python3 -m main --device cuda --mode rgb_array --hyper_opt &> logs/${branch_name}_$(date +%s%3N).log
