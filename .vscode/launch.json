@@ -5,11 +5,18 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Experiment",
+            "name": "Train",
             "type": "debugpy",
             "request": "launch",
             "module": "main",
             "args": ["--device", "cpu", "--train", "--mode", "human"]
+        },
+        {
+            "name": "Hyperparameter Optimization",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "main",
+            "args": ["--device", "cpu", "--hyper_opt", "--mode", "human"]
         }
     ]
 }

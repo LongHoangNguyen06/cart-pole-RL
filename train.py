@@ -1,3 +1,4 @@
+import traceback
 import gymnasium as gym
 import numpy as np
 import torch
@@ -49,8 +50,6 @@ def train(params: dict):
     Args:
         params (dict): parameters to train model
     """
-    wandb.init(project="Cart Pole RL", name=params["EXPERIMENT_NAME"])
-
     # Initialize network and RL loop
     net = network.Network(params=params)
     action_inferrer = network.ActionInferrer(net=net, params=params)
@@ -135,12 +134,82 @@ def train(params: dict):
         # Set next observation as current one
         observation = next_observation
 
-    wandb.finish()
-
     # Evaluating how well the model work
     windows, window_size = [], params["SCORING_WINDOW_SIZE"]
 
     for i in range(len(episode_rewards) - window_size + 1):
         windows.append(np.mean(episode_rewards[i:i + window_size]))
+    performance = np.max(windows)
 
-    return np.max(windows)
+    wandb.log({"metric/performance": performance})
+
+    wandb.finish()
+    return performance
+
+def normal_train(params):
+    wandb.init(project="Cart Pole RL", name=params["EXPERIMENT_NAME"])
+    train(params=params)
+
+def hyperopt(device: str, mode: str):
+    def hyperopt_training_loop(wandb_config):
+        try:
+            params = wandb_config
+            print(wandb_config)
+            exit()
+            train(params)
+        except Exception as e:
+            print(traceback.format_exc())
+            raise e
+    config = {
+        "name": "Cart Pole RL",
+        "method": "bayes",
+        "metric": {
+            "name": "metric/performance",
+            "goal": "maximize"
+        },
+        "parameters": {
+            "LR": {
+                "min": 1e-6,
+                "max": 1e-1
+            },
+            "TRAINING_EPOCHS": {
+                "min": 1e-6,
+                "max": 1e-2
+            },
+            "FINAL_GREEDY_EPSILON_EPOCH": {
+                "values": [32, 64, 128, 256]
+            },
+            "FINAL_GREEDY_EPSILON": {
+                "value": "nll"
+            },
+            "BUFFER_SIZE": {
+                "value": 42
+            },
+            "BATCH_SIZE": {
+                "value": "cuda"
+            },
+            "DUP_FREQ": {
+                "value": 80
+            },
+            "GAMMA": {
+                "value": 500
+            },
+            "LR": {
+                "value": 5
+            },
+            "DROPOUT_P": {
+                "value": 5e-4
+            },
+            "HIDDEN_LAYER_1": {
+                "value": 5e-4
+            },
+            "HIDDEN_LAYER_2": {
+                "value": 5e-4
+            },
+            "FRAME_SKIP": {
+                "value": 5e-4
+            }
+        }
+    }
+    sweep_id = wandb.sweep(config, project='Cart Pole RL')
+    wandb.agent(sweep_id, hyperopt_training_loop, count=config["parameters"]["count"]["value"])

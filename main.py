@@ -22,7 +22,7 @@ if __name__ == '__main__':
     parser.add_argument('--device', default="cuda")
     parser.add_argument('--mode', default="human")
     parser.add_argument('--train', action='store_true')
-    parser.add_argument('--hyperopt', action='store_true')
+    parser.add_argument('--hyper_opt', action='store_true')
     args = parser.parse_args()
 
     if args.train:
@@ -32,4 +32,6 @@ if __name__ == '__main__':
         params["TRAIN"] = args.train
         params["EXPERIMENT_NAME"] = f"experiment_{Repository('.').head.shorthand.zfill(3)}"
         apply_random_seed(params["RANDOM_SEED"])
-        train.train(params=params)
+        train.normal_train(params=params)
+    elif args.hyper_opt:
+        train.hyperopt(device=args.device, mode=args.mode)
