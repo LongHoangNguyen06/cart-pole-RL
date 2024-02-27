@@ -23,7 +23,7 @@ if __name__ == '__main__':
     parser.add_argument('--mode', default="human")
     parser.add_argument('--train', action='store_true')
     parser.add_argument('--hyper_opt', action='store_true')
-    parser.add_argument('--agent_id', default=None)
+    parser.add_argument('--agent_id', default="ei3gt9f6")
     args = parser.parse_args()
     
     if args.train:
