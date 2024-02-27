@@ -6,24 +6,21 @@ import numpy as np
 class Network(torch.nn.Module):
     def __init__(self, params):        
         super().__init__()
-        self.layers = [
+        self.layers = []
+        for i in range(len(params["ARCHITECTURE"]) - 1):
+            self.layers.append(torch.nn.Sequential(
+                    torch.nn.Linear(in_features=params["ARCHITECTURE"][i], out_features=params["ARCHITECTURE"][i+1], bias=True, device=params["DEVICE"]),
+                    torch.nn.LeakyReLU(),
+                    torch.nn.BatchNorm1d(num_features=params["ARCHITECTURE"][i+1], device=params["DEVICE"]),
+                    torch.nn.Dropout(p=params["DROPOUT_P"])
+                )
+            )
+        self.layers += [
             torch.nn.Sequential(
-                torch.nn.Linear(in_features=4, out_features=32, bias=True, device=params["DEVICE"]),
-                torch.nn.LeakyReLU(),
-                torch.nn.BatchNorm1d(num_features=32, device=params["DEVICE"]),
-                torch.nn.Dropout(p=params["DROPOUT_P"])
-            ),
-            torch.nn.Sequential(
-                torch.nn.Linear(in_features=32, out_features=16, bias=True, device=params["DEVICE"]),
-                torch.nn.LeakyReLU(),
-                torch.nn.BatchNorm1d(num_features=16, device=params["DEVICE"]),
-                torch.nn.Dropout(p=params["DROPOUT_P"])
-            ),
-            torch.nn.Sequential(
-                torch.nn.Linear(in_features=16, out_features=2, bias=True, device=params["DEVICE"])
+                torch.nn.Linear(in_features=params["ARCHITECTURE"][-2], out_features=params["ARCHITECTURE"][-1], bias=True, device=params["DEVICE"])
             )
         ]
-        self.activations = [None] * 4
+        self.activations = [None] * len(params["ARCHITECTURE"])
         self.params = params
         self.net = torch.nn.Sequential(*self.layers)
     
