@@ -62,7 +62,7 @@ def train(params: dict):
     observation, _ = env.reset(seed=params["RANDOM_SEED"])
     episode_reward = 0
     actions = []
-    
+
     # Training loop
     for epoch in tqdm(range(params["TRAINING_EPOCHS"])):
         env.render()
@@ -112,7 +112,7 @@ def train(params: dict):
                 wandb.log({f"layer{i+1}/std_grad": net.std_grad(layer)},step=epoch)
 
             actions.append(float(action))
-            table = wandb.Table(data=actions, columns=["actions"])
+            table = wandb.Table(data=[actions], columns=["actions"])
             wandb.log({'output/action_histogram': wandb.plot.histogram(table, "actions",
                     title="Actions distribution")})
             wandb.log({'output/action': float(action)})
