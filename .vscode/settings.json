@@ -24,5 +24,6 @@
             "silent": true
           },
         ]
-      }
+    },
+    "python.terminal.activateEnvInCurrentTerminal": true
 }
