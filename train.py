@@ -6,6 +6,7 @@ import network
 from buffer import Buffer
 import wandb
 from tqdm import tqdm
+import json
 
 def train_iteration(net: network.Network, 
                     dup_net: network.Network, 
@@ -165,64 +166,7 @@ def hyperopt(device: str, mode: str):
         except Exception as e:
             print(traceback.format_exc())
             raise e
-    config = {
-        "name": "Cart Pole RL",
-        "method": "bayes",
-        "metric": {
-            "name": "metric/performance",
-            "goal": "maximize"
-        },
-        "parameters": {
-            "ACTION_SPACE_SEED": {
-                "value": 42
-            },
-            "RANDOM_SEED": {
-                "value": 42
-            },
-            "ACTIONS": {
-                "value": [0, 1]
-            },
-            "SCORING_WINDOW_SIZE": {
-                "value": 100
-            },
-            "LR": {
-                "min": 1e-6,
-                "max": 1e-1
-            },
-            "TRAINING_EPOCHS": {
-                "values": [50000, 100000, 250000, 500000, 1000000]
-            },
-            "FINAL_GREEDY_EPSILON_EPOCH": {
-                "values": [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7]
-            },
-            "FINAL_GREEDY_EPSILON": {
-                "values": [0.01, 0.025, 0.05, 0.075, 0.1]
-            },
-            "BUFFER_SIZE": {
-                "values": [0.1, 0.2, 0.5, 1.0]
-            },
-            "BATCH_SIZE": {
-                "values": [32, 64, 128, 256, 512]
-            },
-            "DUP_FREQ": {
-                "values": [50, 100, 250, 500, 750, 1000, 2000, 5000]
-            },
-            "GAMMA": {
-                "values": [0.9, 0.95, 0.99]
-            },
-            "DROPOUT_P": {
-                "values": [0.05, 0.1, 0.2, 0.3, 0.4, 0.5]
-            },
-            "HIDDEN_LAYER_1": {
-                "values": [8, 16, 32, 64, 128]
-            },
-            "HIDDEN_LAYER_2": {
-                "values": [8, 16, 32, 64, 128]
-            },
-            "FRAME_SKIP": {
-                "values": [1, 2, 3, 4]
-            }
-        }
-    }
+    with open("config/hyperopt_search_space.json", "r") as f:
+        config = json.load(f)
     sweep_id = wandb.sweep(config, project='Cart Pole RL')
     wandb.agent(sweep_id, hyperopt_training_loop, count=10000)
