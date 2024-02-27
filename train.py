@@ -110,6 +110,8 @@ def train(params: dict):
                 wandb.log({f"layer{i+1}/mean_grad": net.mean_grad(layer)},step=epoch)
                 wandb.log({f"layer{i+1}/std_grad": net.std_grad(layer)},step=epoch)
 
+            wandb.log({"output/action", float(action)},step=epoch)
+
         # Reset to new map if terminated
         if terminated or truncated:
             next_observation, _ = env.reset()  # Reset the environment if the episode is over
