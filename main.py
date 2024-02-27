@@ -30,12 +30,6 @@ if __name__ == '__main__':
     params["TRAIN"] = args.train
     params["EXPERIMENT_NAME"] = f"experiment_{Repository('.').head.shorthand.zfill(3)}"
 
-    print("#"*100)
-    for key, value in params.items():
-        key = key.ljust(max(len(k) for k in params)) 
-        print(key, value)
-    print("#"*100)
-
     if args.train:
         apply_random_seed(params["RANDOM_SEED"])
         train.train(params=params)

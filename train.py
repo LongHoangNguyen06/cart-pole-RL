@@ -59,7 +59,15 @@ def train(params: dict):
     buff = Buffer(params=params)
     opt = torch.optim.RMSprop(params=net.parameters(), lr=params["LR"])
     env = EnvWrapper(env=gym.make('CartPole-v1', render_mode=params["MODE"]), params=params)
+    params["MODEL_PARAMETERS"] = str(sum(p.numel() for p in net.parameters() if p.requires_grad))
     
+    # Debug
+    print("#"*100)
+    for key, value in params.items():
+        key = key.ljust(max(len(k) for k in params)) 
+        print(key, value)
+    print("#"*100)
+
     # Initialize variables
     observation, _ = env.reset(seed=params["RANDOM_SEED"])
     episode_reward = 0
