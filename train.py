@@ -167,9 +167,10 @@ def hyperopt(device: str, mode: str, agent_id = None):
         except Exception as e:
             print(traceback.format_exc())
             raise e
-    with open("config/hyperopt_search_space.json", "r") as f:
-        config = json.load(f)
+    
     if agent_id is None:
-        agent_id = wandb.sweep(config, project='Cart Pole RL')
+        with open("config/hyperopt_search_space.json", "r") as f:
+            config = json.load(f)
+            agent_id = wandb.sweep(config, project='Cart Pole RL')
     print(f"Using agent_id = {agent_id}")
-    wandb.agent(agent_id, hyperopt_training_loop, count=10000)
+    wandb.agent(agent_id, hyperopt_training_loop, count=10000, project='Cart Pole RL')
