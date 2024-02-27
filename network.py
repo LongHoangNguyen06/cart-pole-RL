@@ -23,12 +23,7 @@ class Network(torch.nn.Module):
                 torch.nn.Linear(in_features=16, out_features=2, bias=True, device=params["DEVICE"])
             )
         ]
-        self.activations = [
-            torch.zeros(1, 4),
-            torch.zeros(1, 32),
-            torch.zeros(1, 16),
-            torch.zeros(1, 2)
-        ]
+        self.activations = [None] * 4
         self.params = params
         self.net = torch.nn.Sequential(*self.layers)
     
