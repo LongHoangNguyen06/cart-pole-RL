@@ -347,7 +347,7 @@ def hyperopt(device: str, mode: str, sweep_id = None):
                     params["ARCHITECTURE"] = [4, params["HIDDEN_LAYER_1"], params["HIDDEN_LAYER_2"], 2]
                 elif params["NUMER_HIDDEN_LAYERS"] == 2 and params["HIDDEN_LAYER_2"] == 0:
                     params["ARCHITECTURE"] = [4, params["HIDDEN_LAYER_1"], 2]
-                elif params["NUMER_HIDDEN_LAYERS"] == 2 and params["HIDDEN_LAYER_2"] != 0:
+                elif params["NUMBER_HIDDEN_LAYERS"] == 2 and params["HIDDEN_LAYER_2"] != 0:
                     wandb.log({"metric/performance": 0})
                     wandb.finish()
                     return
