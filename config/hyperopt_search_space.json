@@ -6,6 +6,9 @@
         "goal": "maximize"
     },
     "parameters": {
+        "AVERAGE_EPOCHS_PER_EPISODE": {
+            "value": 250
+        },
         "ACTION_SPACE_SEED": {
             "value": 42
         },
@@ -17,6 +20,9 @@
         },
         "SCORING_WINDOW_SIZE": {
             "value": 100
+        },
+        "LAYER_WIDTHS": {
+            "value": [16, 32, 64, 128]
         },
         "LR": {
             "min": 1e-6,
@@ -48,12 +54,6 @@
         },
         "NUMBER_HIDDEN_LAYERS": {
             "values": [1, 2]
-        },
-        "HIDDEN_LAYER_1": {
-            "values": [8, 16, 32, 64, 128]
-        },
-        "HIDDEN_LAYER_2": {
-            "values": [0, 8, 16, 32, 64, 128]
         },
         "FRAME_SKIP": {
             "values": [1, 2, 3]

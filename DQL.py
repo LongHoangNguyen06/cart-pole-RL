@@ -12,10 +12,10 @@ from torchrl.data import ReplayBuffer, ListStorage
     
 class Buffer:
     def __init__(self, params: dict) -> None:
-        max_size = int(params["BUFFER_SIZE"] * params["TRAINING_EPISODES"] * 250)
+        self.params = params
+        max_size = int(params["BUFFER_SIZE"] * params["TRAINING_EPISODES"]  * self.params["AVERAGE_EPOCHS_PER_EPISODE"])
         self.buffer = ReplayBuffer(storage=ListStorage(max_size=max_size),
                                    batch_size=params["BATCH_SIZE"])
-        self.params = params
     
     def __len__(self):
         return len(self.buffer)
@@ -220,7 +220,7 @@ class ActionInferrer:
         self.epoch = 0
 
     def get_epsilon(self):
-        last_greedy_epoch = self.params["FINAL_GREEDY_EPSILON_EPOCH"] * self.params["TRAINING_EPOCHS"]
+        last_greedy_epoch = self.params["FINAL_GREEDY_EPSILON_EPOCH"] * self.params["TRAINING_EPISODES"] * self.params["AVERAGE_EPOCHS_PER_EPISODE"]
         return np.clip((1 - self.epoch / last_greedy_epoch), self.params["FINAL_GREEDY_EPSILON"], 1.0)
 
     def get_train_action(self, x: np.ndarray):
@@ -263,13 +263,13 @@ def train(params: dict):
     episode_rewards = []
     # Training loop
     for episode in tqdm(range(params["TRAINING_EPISODES"])):
-        env.render()
+        observation, _ = env.reset()
         
         # Training part
-        observation, _ = env.reset(seed=params["RANDOM_SEED"])
         episode_reward = 0
         terminated = False
         while not terminated:
+            env.render()
             epoch += 1
             if len(buff) > params["BATCH_SIZE"]:
                 train_iteration(net=net, dup_net=dup_net, opt=opt, buff=buff, params=params)
@@ -308,7 +308,6 @@ def train(params: dict):
                 wandb.log({"metric/greedy_epsilon": action_inferrer.get_epsilon()},step=episode)
             observation = next_observation
 
-        observation, _ = env.reset()
     wandb.finish()
     env.close()
 
@@ -343,9 +342,9 @@ def hyperopt(device: str, mode: str, sweep_id = None):
                 params = wandb.config
                 params["DEVICE"] = device
                 params["MODE"] = mode
-                if params["NUMER_HIDDEN_LAYERS"] == 1:
+                if params["NUMBER_HIDDEN_LAYERS"] == 1:
                     params["ARCHITECTURE"] = [4, params["HIDDEN_LAYER_1"], params["HIDDEN_LAYER_2"], 2]
-                elif params["NUMER_HIDDEN_LAYERS"] == 2 and params["HIDDEN_LAYER_2"] == 0:
+                elif params["NUMBER_HIDDEN_LAYERS"] == 2 and params["HIDDEN_LAYER_2"] == 0:
                     params["ARCHITECTURE"] = [4, params["HIDDEN_LAYER_1"], 2]
                 elif params["NUMBER_HIDDEN_LAYERS"] == 2 and params["HIDDEN_LAYER_2"] != 0:
                     wandb.log({"metric/performance": 0})
@@ -360,5 +359,14 @@ def hyperopt(device: str, mode: str, sweep_id = None):
     if sweep_id is None:
         with open("config/hyperopt_search_space.json", "r") as f:
             config = json.load(f)
+
+            # Architecture search
+            config["ARCHITECTURE"] = []
+            for lw1 in config["LAYER_WIDTHS"]:
+                config["ARCHITECTURE"].append([4, lw1, 2])
+                for lw2 in config["LAYER_WIDTHS"]:
+                    config["ARCHITECTURE"].append([4, lw1, lw2, 2])
+            
+            # Start sweep if needed
             sweep_id = wandb.sweep(config, project='Cart Pole RL')
     wandb.agent(sweep_id, hyperopt_training_loop, count=10000, project='Cart Pole RL')
