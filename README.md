@@ -7,7 +7,7 @@ The purpose of this project is to practice my engineering skill. In order to con
 There are two versions of `CartPole`, namely the `v0` and `v1` versions. According to my best knowledge, the only difference between the two versions is their threshold of when a solution is satisfactory [[1]](https://stackoverflow.com/a/56926451). In my target version `CartPole-v1`, a solution is good if it achieves in average $475/500$ points over $100$ random initial states. A point is rewarded for each step the pendulum's angle is in the range $(-0.2095, 0.2095)$ rad and the pivot point's distance to center is in the range $[0, 2.4)$ [[2]](https://www.gymlibrary.dev/environments/classic_control/cart_pole/).  
 
 <p align="center">
-<img src="images/cartpole.png" width=400/>
+<img src="static/cartpole.png" width=400/>
 </p>
 
 ### Goals of the project
@@ -111,11 +111,11 @@ $$\mathbb{E}[\mathcal{L}(r_t + \gamma \max_{a'} Q(s_{t+1}, a'; \theta'), Q(s_t, 
 
 ### Result
 
-The hyper-parameter optimization ran for around $1$ hour and the best model achieved an average score of $497$ in $100$ consecutive episodes. The score is above $475$ and I can consider the problem `CartPole-v1` to be solved.
+The hyper-parameter optimization ran for around $1$ hour and the best model achieved an average score of $1557$ in $100$ consecutive episodes. The score is three times higher than the threshold $475$ for the problem to be considered solved. The model can be played around with the command 
 
-<p align="center">
-<img src="images/W&B Chart 2_28_2024, 12_29_28 PM.png" width=600/>
-</p>
+```bash
+python3 -m main --demo --model_path static/model.pth --device cpu
+```
 
 ### Conclusion
 

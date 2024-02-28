@@ -11,8 +11,6 @@ if __name__ == '__main__':
     parser.add_argument('--train', action='store_true')
     parser.add_argument('--hyper_opt', action='store_true')
     parser.add_argument('--sweep_id', default=None)
-    parser.add_argument('--demo', action="store_true")
-    parser.add_argument('--model_path', default=None)
     args = parser.parse_args()
 
     if args.train:
@@ -24,8 +22,3 @@ if __name__ == '__main__':
         DQL.normal_train(params=params)
     elif args.hyper_opt:
         DQL.hyperopt(device=args.device, mode=args.mode, sweep_id=args.sweep_id)
-    elif args.demo:        
-        params = yaml.safe_load(Path(f"config/hyperparameters{Repository('.').head.shorthand}.yaml").read_text())
-        params["DEVICE"] = args.device
-        params["MODEL_PATH"] = args.model_path
-        DQL.demo(params=params)

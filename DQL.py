@@ -329,26 +329,6 @@ def train(params: dict):
     env.close()
 
 
-def demo(params: dict):
-    """Demo mode
-
-    Args:
-        params (dict): parameters
-    """
-    net = Network(params=params)
-    net.load_state_dict(torch.load(params["MODEL_PATH"], map_location=torch.device(params["DEVICE"])))
-    action_inferrer = ActionInferrer(net=net, params=params)
-    env = gym.make('CartPole-v1', render_mode="human")
-    net.eval()
-    observation, _ = env.reset()
-    for _ in range(10):
-        terminated = False
-        while not terminated:
-            env.render()
-            action = action_inferrer.get_best_action(observation.reshape(1, -1))
-            for _ in range(params["FRAME_SKIP"]):
-                observation, re, terminated, truncated, _ = env.step(action)
-                if terminated or truncated: break
 
 
 def normal_train(params: dict):
