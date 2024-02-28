@@ -378,7 +378,7 @@ def hyperopt(device: str, mode: str, sweep_id = None):
         session_counter += 1
         try:    
             import time
-            experiment_name = f"session_{session_counter}_{round(time.time())}"
+            experiment_name = f"{round(time.time_ns())}_{agent_id}"
             with wandb.init(config = config, name=experiment_name):
                 params = wandb.config
                 params["DEVICE"] = device
@@ -404,4 +404,4 @@ def hyperopt(device: str, mode: str, sweep_id = None):
             
             # Start sweep if needed
             sweep_id = wandb.sweep(config, project='Cart Pole RL')
-    wandb.agent(sweep_id, hyperopt_training_loop, count=10000, project='Cart Pole RL')
+    agent_id = wandb.agent(sweep_id, hyperopt_training_loop, count=10000, project='Cart Pole RL')
