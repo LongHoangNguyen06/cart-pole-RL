@@ -3,7 +3,6 @@ import gymnasium as gym
 import numpy as np
 import torch
 import wandb
-from tqdm import tqdm
 import json
 from typing import Tuple
 import numpy as np
