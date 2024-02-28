@@ -1,1 +1,1 @@
-/home/long/anaconda3/envs/DL/bin/python3 -m main --device cuda --mode rgb_array --hyper_opt --sweep_id 5294wrq4 &> logs/${SESSION_NAME}.log
+/home/long/anaconda3/envs/DL/bin/python3 -m main --device cuda --mode rgb_array --hyper_opt --sweep_id 0yn7hqqf &> logs/${SESSION_NAME}.log
