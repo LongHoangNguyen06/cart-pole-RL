@@ -82,7 +82,7 @@ where $\mathcal{L}$ is an arbitrary standard differentiable loss function in reg
 
 The first obstacle was to decide how to pre-process input of the problem. For CNN, input's features have homogeneous ranges $[0, 255]$ and hence scaling was trivial. In my case, the cart position has range $[-4.8, 4.8]$ and the pole angle could be in range $[-0.418, 0.418]$ while the cart velocity and pole angular velocity do not have bounded ranges. After testing multiple ways to clip the velocities, I found it was for the best to leave the ranges unbounded and even unnormalized. While the experiments were not exhaustive, I got the model learning when leave everything as-is and that was good enough for my goal. 
 
-Regarding the architecture, I opted for simple feed-forward network. Since the problem was easy in nature, I decided to start with an one-layer network. The final network, found with help of Bayesian Optimization at the time of writing, consists of two layers with $128$ and $64$ neurons, respectively. 
+Regarding the architecture, I opted for simple feed-forward network. Since the problem was easy in nature, I decided to start with an one-layer network. The final network, found with help of Bayesian Optimization at the time of writing, consists of two layers with $64$ and $32$ neurons, respectively. 
 
 After a few experiments where the network failed to run and I was sure the problem was not in my code, I visualized the network's gradients, activations and weights' distribution. For the first time I encountered the problem of gradient exploding and realized this problem is not just theoretical. To mitigate gradient exploding, gradients were clipped to be between $-1$ and $1$.
 
@@ -114,7 +114,7 @@ $$\mathbb{E}[\mathcal{L}(r_t + \gamma \max_{a'} Q(s_{t+1}, a'; \theta'), Q(s_t, 
 The hyper-parameter optimization ran for around $1$ hour and the best model achieved an average score of $1557$ in $100$ consecutive episodes. The score is three times higher than the threshold $475$ for the problem to be considered solved. The model can be played around with the command 
 
 ```bash
-python3 -m main --demo --model_path static/model.pth --device cpu
+python3 demo.py
 ```
 
 ### Conclusion
