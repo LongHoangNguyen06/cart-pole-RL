@@ -23,6 +23,24 @@
             "useShortcut": false,
             "silent": true
           },
+          {
+            "match": ".*",
+            "cmd": "rsync -a --no-owner ${file} gpu-server1:/home/long/Documents/GitHub/cart-pole-RL/${relativeFile}",
+            "useShortcut": false,
+            "silent": true
+          },
+          {
+            "match": ".*",
+            "cmd": "rsync -a --no-owner gpu-server1:/home/long/Documents/GitHub/cart-pole-RL/logs .",
+            "useShortcut": false,
+            "silent": true
+          },
+          {
+            "match": ".*",
+            "cmd": "rsync -a --no-owner .git gpu-server1:/home/long/Documents/GitHub/cart-pole-RL",
+            "useShortcut": false,
+            "silent": true
+          },
         ]
     },
     "python.terminal.activateEnvInCurrentTerminal": true
