@@ -111,7 +111,7 @@ $$\mathbb{E}[\mathcal{L}(r_t + \gamma \max_{a'} Q(s_{t+1}, a'; \theta'), Q(s_t, 
 
 ### Result
 
-The hyper-parameter optimization ran for around $1$ hour and the best model achieved an average score of $463$ on $100$ consecutive episodes. While the score is below the threshold of $475$, it's still enough for me to consider the problem `CartPole-v1` to be solved. The win-cost ratio is too low for me to continue with the experiments.
+The hyper-parameter optimization ran for around $1$ hour and the best model achieved an average score of $497$ in $100$ consecutive episodes. The score is above $475$ and I can consider the problem `CartPole-v1` to be solved.
 
 <p align="center">
 <img src="images/W&B Chart 2_28_2024, 12_29_28 PM.png" width=600/>
@@ -119,5 +119,5 @@ The hyper-parameter optimization ran for around $1$ hour and the best model achi
 
 ### Conclusion
 
-While `v1` is not solved, yet, I still consider this project a win for me since debugging a network gave me a run for my money and I learned valuable tools to help me approaching more interesting and challenging problems.
+While the `v1` problem is one of the easier challenges, I still consider this project a win for me since debugging a network gave me a run for my money and I learned valuable hyper-optimization tools to help me to approach more interesting and challenging problems.
 
