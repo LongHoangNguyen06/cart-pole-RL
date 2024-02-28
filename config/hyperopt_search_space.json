@@ -5,11 +5,6 @@
         "name": "metric/performance",
         "goal": "maximize"
     },
-    "early_terminate": {
-        "type": "hyperband",
-        "min_iter": 10000,
-        "eta": 1.5
-    },
     "parameters": {
         "ACTION_SPACE_SEED": {
             "value": 42
