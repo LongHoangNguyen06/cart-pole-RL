@@ -8,7 +8,7 @@ from typing import Tuple
 import numpy as np
 import torch
 from torchrl.data import ReplayBuffer, ListStorage
-    
+
 class Buffer:
     def __init__(self, params: dict) -> None:
         self.params = params
