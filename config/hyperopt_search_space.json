@@ -5,6 +5,11 @@
         "name": "metric/performance",
         "goal": "maximize"
     },
+    "early_terminate": {
+        "type": "hyperband",
+        "min_iter": 10000,
+        "eta": 1.5
+    },
     "parameters": {
         "ACTION_SPACE_SEED": {
             "value": 42
@@ -18,15 +23,18 @@
         "SCORING_WINDOW_SIZE": {
             "value": 100
         },
-        "LAYER_WIDTHS": {
-            "value": [16, 32, 64, 128]
+        "LAYER_1_WIDTHS": {
+            "value": [32, 64, 128]
+        },
+        "LAYER_2_WIDTHS": {
+            "value": [16, 32, 64]
         },
         "LR": {
             "min": 1e-6,
             "max": 1e-3
         },
         "TRAINING_EPOCHS": {
-            "values": [50000, 75000, 100000, 150000, 200000, 300000]
+            "values": [300000]
         },
         "FINAL_GREEDY_EPSILON_EPOCH": {
             "values": [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
@@ -38,7 +46,7 @@
             "values": [0.01, 0.05, 0.1, 0.2, 0.5, 0.75, 1.0]
         },
         "BATCH_SIZE": {
-            "values": [16, 32, 64, 128, 256]
+            "values": [8, 16, 32, 64]
         },
         "DUP_FREQ": {
             "values": [5, 10, 25, 50, 100]

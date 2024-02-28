@@ -263,7 +263,7 @@ def train(params: dict):
     episode = 0
     episode_rewards = []
     # Training loop
-    while epoch < tqdm(range(params["TRAINING_EPOCHS"])):
+    while epoch < params["TRAINING_EPOCHS"]:
         observation, _ = env.reset()
         episode += 1
         episode_reward = 0
@@ -341,7 +341,7 @@ def hyperopt(device: str, mode: str, sweep_id = None):
                 params = wandb.config
                 params["DEVICE"] = device
                 params["MODE"] = mode
-                params = dict(params)
+                params = dict(params) # important
                 train(params)
         except Exception as e:
             print(traceback.format_exc())
@@ -354,9 +354,9 @@ def hyperopt(device: str, mode: str, sweep_id = None):
             # Architecture search
             config["parameters"]["ARCHITECTURE"] = dict()
             config["parameters"]["ARCHITECTURE"]["values"] = []
-            for lw1 in config["parameters"]["LAYER_WIDTHS"]["value"]:
+            for lw1 in config["parameters"]["LAYER_1_WIDTHS"]["value"]:
                 config["parameters"]["ARCHITECTURE"]["values"].append([4, lw1, 2])
-                for lw2 in config["parameters"]["LAYER_WIDTHS"]["value"]:
+                for lw2 in config["parameters"]["LAYER_2_WIDTHS"]["value"]:
                     config["parameters"]["ARCHITECTURE"]["values"].append([4, lw1, lw2, 2])
             
             # Start sweep if needed
