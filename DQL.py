@@ -13,7 +13,7 @@ from torchrl.data import ReplayBuffer, ListStorage
 class Buffer:
     def __init__(self, params: dict) -> None:
         self.params = params
-        max_size = int(params["BUFFER_SIZE"] * params["TRAINING_EPISODES"]  * self.params["AVERAGE_EPOCHS_PER_EPISODE"])
+        max_size = int(params["BUFFER_SIZE"] * params["TRAINING_EPOCHS"])
         self.buffer = ReplayBuffer(storage=ListStorage(max_size=max_size),
                                    batch_size=params["BATCH_SIZE"])
     
@@ -220,7 +220,7 @@ class ActionInferrer:
         self.epoch = 0
 
     def get_epsilon(self):
-        last_greedy_epoch = self.params["FINAL_GREEDY_EPSILON_EPOCH"] * self.params["TRAINING_EPISODES"] * self.params["AVERAGE_EPOCHS_PER_EPISODE"]
+        last_greedy_epoch = self.params["FINAL_GREEDY_EPSILON_EPOCH"] * self.params["TRAINING_EPOCHS"]
         return np.clip((1 - self.epoch / last_greedy_epoch), self.params["FINAL_GREEDY_EPSILON"], 1.0)
 
     def get_train_action(self, x: np.ndarray):
@@ -260,14 +260,16 @@ def train(params: dict):
     # Initialize variables
     hyperopt_performance = 0
     epoch = 0
+    episode = 0
     episode_rewards = []
     # Training loop
-    for episode in tqdm(range(params["TRAINING_EPISODES"])):
+    while epoch < tqdm(range(params["TRAINING_EPOCHS"])):
         observation, _ = env.reset()
-        
-        # Training part
+        episode += 1
         episode_reward = 0
         terminated = False
+
+        # Train one episode
         while not terminated:
             env.render()
             epoch += 1
@@ -286,7 +288,7 @@ def train(params: dict):
                 episode_reward += re
                 if terminated or truncated: break
             
-            # Episode reward
+            # Buffer insertion
             buff.append(observation=observation, 
                         action=action, 
                         next_observation=next_observation, 
@@ -295,19 +297,16 @@ def train(params: dict):
 
             # Duplicate the network once for a while and fix it
             if epoch % params["DUP_FREQ"] == 0: dup_net = duplicate(net=net)
-            
-            # Reset to new map if terminated
-            if terminated or truncated:
-                episode_rewards.append(episode_reward)
-                episode_reward = 0
-
-                # Debugging
-                if len(episode_rewards) > params["SCORING_WINDOW_SIZE"]:
-                    hyperopt_performance = max(hyperopt_performance, np.mean(episode_rewards[-params["SCORING_WINDOW_SIZE"]:]))
-                    wandb.log({"metric/performance": hyperopt_performance}, step=episode)
-                wandb.log({"metric/greedy_epsilon": action_inferrer.get_epsilon()},step=episode)
             observation = next_observation
 
+        # End of episode
+        # Check current performance
+        episode_rewards.append(episode_reward)
+        if len(episode_rewards) > params["SCORING_WINDOW_SIZE"]:
+            hyperopt_performance = max(hyperopt_performance, np.mean(episode_rewards[-params["SCORING_WINDOW_SIZE"]:]))
+        wandb.log({"metric/performance": hyperopt_performance}, step=episode)
+
+    # Finish
     wandb.finish()
     env.close()
 
@@ -353,11 +352,12 @@ def hyperopt(device: str, mode: str, sweep_id = None):
             config = json.load(f)
 
             # Architecture search
-            config["ARCHITECTURE"] = []
-            for lw1 in config["LAYER_WIDTHS"]:
-                config["ARCHITECTURE"].append([4, lw1, 2])
-                for lw2 in config["LAYER_WIDTHS"]:
-                    config["ARCHITECTURE"].append([4, lw1, lw2, 2])
+            config["parameters"]["ARCHITECTURE"] = dict()
+            config["parameters"]["ARCHITECTURE"]["values"] = []
+            for lw1 in config["parameters"]["LAYER_WIDTHS"]["value"]:
+                config["parameters"]["ARCHITECTURE"]["values"].append([4, lw1, 2])
+                for lw2 in config["parameters"]["LAYER_WIDTHS"]["value"]:
+                    config["parameters"]["ARCHITECTURE"]["values"].append([4, lw1, lw2, 2])
             
             # Start sweep if needed
             sweep_id = wandb.sweep(config, project='Cart Pole RL')
