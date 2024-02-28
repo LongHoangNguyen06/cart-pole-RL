@@ -342,14 +342,6 @@ def hyperopt(device: str, mode: str, sweep_id = None):
                 params = wandb.config
                 params["DEVICE"] = device
                 params["MODE"] = mode
-                if params["NUMBER_HIDDEN_LAYERS"] == 1:
-                    params["ARCHITECTURE"] = [4, params["HIDDEN_LAYER_1"], params["HIDDEN_LAYER_2"], 2]
-                elif params["NUMBER_HIDDEN_LAYERS"] == 2 and params["HIDDEN_LAYER_2"] == 0:
-                    params["ARCHITECTURE"] = [4, params["HIDDEN_LAYER_1"], 2]
-                elif params["NUMBER_HIDDEN_LAYERS"] == 2 and params["HIDDEN_LAYER_2"] != 0:
-                    wandb.log({"metric/performance": 0})
-                    wandb.finish()
-                    return
                 params = dict(params)
                 train(params)
         except Exception as e:
