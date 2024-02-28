@@ -74,7 +74,7 @@ While the third expression, also known as the Bellman Optimality Equation, simpl
 
 Now in the original format, $Q$-learning can be understood as learning a table consist of states rows $s_t$ and action columns $a$ with expected reward entries of $r_t \sim p(r_t \mid s_t, a_t)$. Deep-$Q$-learning replaces the explicit tables with a deep neural network parametrized by $\theta$ with the loss function w.r.t network's parameter $\theta$
 
-$$\mathbb{E}_{s_t, a_t, r_t}[\mathcal{L}(r_t + \gamma \max_{a'} Q(s_{t+1}, a'; \theta), Q(s_t, a_t; \theta))]$$
+$$\mathbb{E}[\mathcal{L}(r_t + \gamma \max_{a'} Q(s_{t+1}, a'; \theta), Q(s_t, a_t; \theta))]$$
 
 where $\mathcal{L}$ is an arbitrary standard differentiable loss function in regression context. Here we can reduce the expected loss by empirical risk minimization.
 
@@ -82,7 +82,7 @@ where $\mathcal{L}$ is an arbitrary standard differentiable loss function in reg
 
 The first obstacle was to decide how to pre-process input of the problem. For CNN, input's features have homogeneous ranges $[0, 255]$ and hence scaling was trivial. In my case, the cart position has range $[-4.8, 4.8]$ and the pole angle could be in range $[-0.418, 0.418]$ while the cart velocity and pole angular velocity do not have bounded ranges. After testing multiple ways to clip the velocities, I found it was for the best to leave the ranges unbounded and even unnormalized. While the experiments were not exhaustive, I got the model learning when leave everything as-is and that was good enough for my goal. 
 
-Regarding the architecture, I opted for simple feed-forward network. Since the problem was easy in nature, I decided to start with an one-layer network. The final network, found with help of Bayesian Optimization at the time of writing, consists of two layers with $64$ and $32$ neurons, respectively. 
+Regarding the architecture, I opted for simple feed-forward network. Since the problem was easy in nature, I decided to start with an one-layer network. The final network, found with help of Bayesian Optimization at the time of writing, consists of two layers with $128$ and $64$ neurons, respectively. 
 
 After a few experiments where the network failed to run and I was sure the problem was not in my code, I visualized the network's gradients, activations and weights' distribution. For the first time I encountered the problem of gradient exploding and realized this problem is not just theoretical. To mitigate gradient exploding, gradients were clipped to be between $-1$ and $1$.
 
@@ -102,11 +102,22 @@ next_state_best_rewards = target_net(next_observation).max(dim=-1)[0] * (1 - ter
 state_action_expected_reward = reward + params["GAMMA"] * next_state_best_rewards
 ```
 
+In order to reduce correlation between consecutive frames and diverse states in the buffer, frame skipping was introduced where an action from the network can be repeated $1, 2$ or $3$ times before the next observation is fed to the network, again.
+
+To help with the optimization, I used the strategy of double network $\theta'$ which is duplicate of $\theta$ and is updated once in a while. The loss function was changed to
+
+$$\mathbb{E}[\mathcal{L}(r_t + \gamma \max_{a'} Q(s_{t+1}, a'; \theta'), Q(s_t, a_t; \theta))]$$
+
+
 ### Result
 
-After getting the code run smoothly and the learned network showed first signs of balancing the pendulum successfully, I ran a Bayesian Optimization script on every hyperparameter and achieved an average score of $280$ on $100$ consecutive episodes. While this score is enough to be considered to solve `CartPole-v0`, I still need research for improvements to solve `CartPole-v1`.
+The hyper-parameter optimization ran for around $1$ hour and the best model achieved an average score of $463$ on $100$ consecutive episodes. While the score is below the threshold of $475$, it's still enough for me to consider the problem `CartPole-v1` to be solved. The win-cost ratio is too low for me to continue with the experiments.
+
+<p align="center">
+<img src="images/W&B Chart 2_28_2024, 12_29_28 PM.png" width=600/>
+</p>
 
 ### Conclusion
 
-While `v1` is not solved, yet, I still consider this project a win for me since debugging a network gave me a run for my money. I now feel more confidence in my engineering skill and am ready for more challenging problems.
+While `v1` is not solved, yet, I still consider this project a win for me since debugging a network gave me a run for my money and I learned valuable tools to help me approaching more interesting and challenging problems.
 
