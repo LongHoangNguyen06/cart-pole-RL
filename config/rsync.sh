@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Define the directories you want to sync
-directories=("config" "images" ".vscode")
+directories=(.git config images .vscode)
 
 # Define the files you want to sync
 files=(.gitignore *.py *.md *.txt)
