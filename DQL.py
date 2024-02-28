@@ -12,10 +12,13 @@ from torchrl.data import ReplayBuffer, ListStorage
     
 class Buffer:
     def __init__(self, params: dict) -> None:
-        max_size = int(params["BUFFER_SIZE"] * params["TRAINING_EPOCHS"])
+        max_size = int(params["BUFFER_SIZE"] * params["TRAINING_EPISODES"] * 250)
         self.buffer = ReplayBuffer(storage=ListStorage(max_size=max_size),
                                    batch_size=params["BATCH_SIZE"])
         self.params = params
+    
+    def __len__(self):
+        return len(self.buffer)
 
     def append(self, observation: np.ndarray, 
                     action: int, 
@@ -255,83 +258,59 @@ def train(params: dict):
     print("#"*100)
 
     # Initialize variables
-    observation, _ = env.reset(seed=params["RANDOM_SEED"])
-    episode_reward = 0
+    hyperopt_performance = 0
+    epoch = 0
     episode_rewards = []
     # Training loop
-    for epoch in tqdm(range(params["TRAINING_EPOCHS"])):
+    for episode in tqdm(range(params["TRAINING_EPISODES"])):
         env.render()
         
         # Training part
-        loss = None
-        if epoch > params["BATCH_SIZE"]:
-            loss = train_iteration(net=net, dup_net=dup_net, opt=opt, buff=buff, params=params)
+        observation, _ = env.reset(seed=params["RANDOM_SEED"])
+        episode_reward = 0
+        terminated = False
+        while not terminated:
+            epoch += 1
+            if len(buff) > params["BATCH_SIZE"]:
+                train_iteration(net=net, dup_net=dup_net, opt=opt, buff=buff, params=params)
         
-        # Get action to fill buffer
-        net.eval()
-        action = action_inferrer.get_train_action(observation.reshape(1, -1))
+            # Get action to fill buffer
+            net.eval()
+            action = action_inferrer.get_train_action(observation.reshape(1, -1))
 
-        # Simulate environment once and insert next observation to buffer
-        for _ in range(params["FRAME_SKIP"]):
-            next_observation, reward, terminated, truncated, _ = env.step(action)
-            if terminated or truncated: break
-        
-        # Episode reward
-        episode_reward += reward
-        buff.append(observation=observation, 
-                    action=action, 
-                    next_observation=next_observation, 
-                    reward=reward,
-                    terminated=terminated)
-
-        # Duplicate the network once for a while and fix it
-        if epoch % params["DUP_FREQ"] == 0: dup_net = duplicate(net=net)
-        
-        # Debugging part
-        if True:
-            wandb.log({"metric/greedy_epsilon": action_inferrer.get_epsilon()},step=epoch)
-            wandb.log({"metric/reward": reward},step=epoch)
-            if loss: wandb.log({"metric/loss": float(loss)},step=epoch)
-
-            wandb.log({"input/positions": float(next_observation[0])},step=epoch)
-            wandb.log({"input/velocity": float(next_observation[1])},step=epoch)
-            wandb.log({"input/angle": float(next_observation[2])},step=epoch)
-            wandb.log({"input/angular_velocity": float(next_observation[3])},step=epoch)
+            # Simulate environment once and insert next observation to buffer
+            reward = 0
+            for _ in range(params["FRAME_SKIP"]):
+                next_observation, re, terminated, truncated, _ = env.step(action)
+                reward += re
+                episode_reward += re
+                if terminated or truncated: break
             
-            for i, layer in enumerate(net.layers):
-                wandb.log({f"layer{i+1}/mean_activation": torch.mean(net.activations[i+1])},step=epoch)
-                wandb.log({f"layer{i+1}/std_activation": torch.std(net.activations[i+1])},step=epoch)
-                wandb.log({f"layer{i+1}/mean_weight": net.mean_weight(layer)},step=epoch)
-                wandb.log({f"layer{i+1}/std_weight": net.std_weight(layer)},step=epoch)
-                wandb.log({f"layer{i+1}/mean_grad": net.mean_grad(layer)},step=epoch)
-                wandb.log({f"layer{i+1}/std_grad": net.std_grad(layer)},step=epoch)
+            # Episode reward
+            buff.append(observation=observation, 
+                        action=action, 
+                        next_observation=next_observation, 
+                        reward=reward,
+                        terminated=terminated)
 
-            wandb.log({'output/action': float(action)},step=epoch)
+            # Duplicate the network once for a while and fix it
+            if epoch % params["DUP_FREQ"] == 0: dup_net = duplicate(net=net)
             
             # Reset to new map if terminated
             if terminated or truncated:
-                next_observation, _ = env.reset()  # Reset the environment if the episode is over
-                wandb.log({"metric/episode_reward": episode_reward},step=epoch)
-                wandb.log({'episode_start/positions': float(next_observation[0])},step=epoch)
-                wandb.log({'episode_start/velocity': float(next_observation[1])},step=epoch)
-                wandb.log({'episode_start/angle': float(next_observation[2])},step=epoch)
-                wandb.log({'episode_start/angular_velocity': float(next_observation[3])},step=epoch)
                 episode_rewards.append(episode_reward)
                 episode_reward = 0
 
-        # Set next observation as current one
-        observation = next_observation
+                # Debugging
+                if len(episode_rewards) > params["SCORING_WINDOW_SIZE"]:
+                    hyperopt_performance = max(hyperopt_performance, np.mean(episode_rewards[-params["SCORING_WINDOW_SIZE"]:]))
+                    wandb.log({"metric/performance": hyperopt_performance}, step=episode)
+                wandb.log({"metric/greedy_epsilon": action_inferrer.get_epsilon()},step=episode)
+            observation = next_observation
 
-    # Evaluating how well the model work
-    windows, window_size = [], params["SCORING_WINDOW_SIZE"]
-
-    for i in range(len(episode_rewards) - window_size + 1):
-        windows.append(np.mean(episode_rewards[i:i + window_size]))
-    performance = np.max(windows)
-    wandb.log({"metric/performance": performance})
+        observation, _ = env.reset()
     wandb.finish()
     env.close()
-    return performance
 
 def normal_train(params: dict):
     """Manual training loop
@@ -364,7 +343,14 @@ def hyperopt(device: str, mode: str, sweep_id = None):
                 params = wandb.config
                 params["DEVICE"] = device
                 params["MODE"] = mode
-                params["ARCHITECTURE"] = [4, params["HIDDEN_LAYER_1"], params["HIDDEN_LAYER_2"], 2]
+                if params["NUMER_HIDDEN_LAYERS"] == 1:
+                    params["ARCHITECTURE"] = [4, params["HIDDEN_LAYER_1"], params["HIDDEN_LAYER_2"], 2]
+                elif params["NUMER_HIDDEN_LAYERS"] == 2 and params["HIDDEN_LAYER_2"] == 0:
+                    params["ARCHITECTURE"] = [4, params["HIDDEN_LAYER_1"], 2]
+                elif params["NUMER_HIDDEN_LAYERS"] == 2 and params["HIDDEN_LAYER_2"] != 0:
+                    wandb.log({"metric/performance": 0})
+                    wandb.finish()
+                    return
                 params = dict(params)
                 train(params)
         except Exception as e:
