@@ -8,6 +8,20 @@ from typing import Tuple
 import numpy as np
 import torch
 from torchrl.data import ReplayBuffer, ListStorage
+import numpy as np
+import torch
+import random
+
+
+def apply_random_seed(random_seed: int) -> None:
+    """Sets seed to ``random_seed`` in random, numpy and torch."""
+    random.seed(random_seed)
+    np.random.seed(random_seed)
+    torch.manual_seed(random_seed)
+    torch.cuda.manual_seed(random_seed)
+    torch.cuda.manual_seed_all(random_seed)
+    torch.backends.cudnn.benchmark = False
+    torch.backends.cudnn.deterministic = True
 
 class Buffer:
     def __init__(self, params: dict) -> None:
@@ -240,6 +254,8 @@ def train(params: dict):
     Args:
         params (dict): parameters to train model
     """
+    apply_random_seed(42)
+
     # Initialize network and RL loop
     net = Network(params=params)
     action_inferrer = ActionInferrer(net=net, params=params)
@@ -248,7 +264,7 @@ def train(params: dict):
     opt = torch.optim.RMSprop(params=net.parameters(), lr=params["LR"])
     env = gym.make('CartPole-v1', render_mode=params["MODE"])
     params["MODEL_PARAMETERS"] = str(sum(p.numel() for p in net.parameters() if p.requires_grad))
-    
+
     # Debug
     print("#"*100)
     for key, value in params.items():
@@ -302,12 +318,38 @@ def train(params: dict):
         # Check current performance
         episode_rewards.append(episode_reward)
         if len(episode_rewards) > params["SCORING_WINDOW_SIZE"]:
-            hyperopt_performance = max(hyperopt_performance, np.mean(episode_rewards[-params["SCORING_WINDOW_SIZE"]:]))
+            new_hyperopt = np.mean(episode_rewards[-params["SCORING_WINDOW_SIZE"]:])
+            if new_hyperopt > hyperopt_performance:
+                torch.save(net.state_dict(), f'logs/{params["EXPERIMENT_NAME"]}.pth')
+            hyperopt_performance = max(hyperopt_performance, new_hyperopt)
         wandb.log({"metric/performance": hyperopt_performance}, step=episode)
 
     # Finish
     wandb.finish()
     env.close()
+
+
+def demo(params: dict):
+    """Demo mode
+
+    Args:
+        params (dict): parameters
+    """
+    net = Network(params=params)
+    net.load_state_dict(torch.load(params["MODEL_PATH"], map_location=torch.device(params["DEVICE"])))
+    action_inferrer = ActionInferrer(net=net, params=params)
+    env = gym.make('CartPole-v1', render_mode="human")
+    net.eval()
+    observation, _ = env.reset()
+    for _ in range(10):
+        terminated = False
+        while not terminated:
+            env.render()
+            action = action_inferrer.get_best_action(observation.reshape(1, -1))
+            for _ in range(params["FRAME_SKIP"]):
+                observation, re, terminated, truncated, _ = env.step(action)
+                if terminated or truncated: break
+
 
 def normal_train(params: dict):
     """Manual training loop
@@ -336,10 +378,12 @@ def hyperopt(device: str, mode: str, sweep_id = None):
         session_counter += 1
         try:    
             import time
-            with wandb.init(config = config, name=f"session_{session_counter}_{round(time.time())}"):
+            experiment_name = f"session_{session_counter}_{round(time.time())}"
+            with wandb.init(config = config, name=experiment_name):
                 params = wandb.config
                 params["DEVICE"] = device
                 params["MODE"] = mode
+                params["EXPERIMENT_NAME"] = experiment_name
                 params = dict(params) # important
                 train(params)
         except Exception as e:
