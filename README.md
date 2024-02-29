@@ -58,12 +58,11 @@ The goal of reinforcement learning is to learn a policy $\pi$ which maps a state
 
 Depending on the problem and the actual goal we have in our mind, we must make a trade-off between achieving small rewards now or staying patient to achieve a larger pay-out later. Intuitively, an pay-out's relevance decreases the further the moment of reward lies in the future. In dependence of the problem, we might want our ideal policy to maximize reward as fast as possible, like this inverted pendulum that I am trying to solve. Or we might want the model to work its way to the actual goal which might be far in the future, think of strategic games, while sacrificing small rewards on its way until then.
 
-
 Formally we want to formulate the expected rewards we can get at state $s_t$ if we execute an action $a_t$ and then follow the policy $\pi$ in the future steps. To express our desire to achieve rewards faster, we rescale the rewards in the future by a geometric series and denote it as
 
 $$Q^\pi(s_t, a_t) = \mathbb{E}[\sum_k \gamma^k r_{t + k} \mid s_t, a_t, \pi]$$
 
-While the discount factor $\gamma$ can be tuned, if $\gamma < 1$ then its exponential nature make future rewards vanishing quickly. The optimal $\hat{Q}(s_t, a_t)$ given fixed $s_t, a_t$ can be achieved by learning the best policy. Suppose we know $\hat{Q}(s_t, a_t)$ for any $a_t$, then the best action can be determined with this $\hat{Q}$; and knowing the best possible action for the current state gives us the optimal policy. While this seems like a chicken egg problem, the next theoretical part will help us to resolve the circular dependency.
+This sum of scaled rewards is often also called the `return`. While the discount factor $\gamma$ can be tuned, if $\gamma < 1$ then its exponential nature make future rewards vanishing quickly. The optimal $\hat{Q}(s_t, a_t)$ given fixed $s_t, a_t$ can be achieved by learning the best policy. Suppose we know $\hat{Q}(s_t, a_t)$ for any $a_t$, then the best action can be determined with this $\hat{Q}$; and knowing the best possible action for the current state gives us the optimal policy. While this seems like a chicken egg problem, the next theoretical part will help us to resolve the circular dependency.
 
 
 It's not hard to show that 
