@@ -102,9 +102,9 @@ state_action_expected_reward = reward + params["GAMMA"] * next_state_best_reward
 
 In order to reduce correlation between consecutive frames and diverse states in the buffer, frame skipping was introduced where an action from the network can be repeated $1, 2$ or $3$ times before the next observation is fed to the network, again.
 
-To help with the optimization, I used the strategy of double network $\theta'$ which is duplicate of $\theta$ and is updated once in a while. The loss function was changed to
+To help with the optimization, I used the strategy of double network $\theta'$ which is duplicate of $\theta$ and is updated once in a while. The implemented loss function was changed to
 
-$$\mathbb{E}[\mathcal{L}(r_t + \gamma \max_{a'} Q(s_{t+1}, a'; \theta'), Q(s_t, a_t; \theta))]$$
+$$\sum \mathcal{L}(r_t + \gamma \max_{a'} Q(s_{t+1}, a'; \theta'), Q(s_t, a_t; \theta))]$$
 
 
 ### Result
